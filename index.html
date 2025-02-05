@@ -152,9 +152,31 @@
     const addresses = Object.keys(locationMapping);
 
     /* ---------------- Persistent State ---------------- */
+    function getDefaultState() {
+      return {
+        current_ip: "192.241.0.1",
+        ip_set_time: Date.now(),
+        current_location: "4184 Berkshire Circle, Chattanooga, TN",
+        target_location: "4184 Berkshire Circle, Chattanooga, TN",
+        isTraveling: false,
+        travelStartTime: null,
+        travelDuration: 0,
+        device_info: "Windows 11 | Ryzen 7 5800X | RTX 3070",
+        energyLevel: getRandomInt(50, 90),
+        phone_battery: getRandomInt(50, 80),
+        phoneCharging: false,
+        current_activity: "Initializing",
+        activity_start_time: Date.now(),
+        activity_duration: 0,
+        persistentHeartRate: getRandomInt(60, 80),
+        persistentBodyTemp: 36.5 + (Math.random() - 0.5),
+        lastUpdateTime: Date.now()
+      };
+    }
     function loadState() {
       try {
-        return localStorage.getItem("simulationState") ? JSON.parse(localStorage.getItem("simulationState")) : null;
+        let state = localStorage.getItem("simulationState");
+        return state ? JSON.parse(state) : null;
       } catch (e) {
         return null;
       }
@@ -162,26 +184,9 @@
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
     }
-    // Initialize defaults if not loaded.
-    let simulationState = loadState() || {
-      current_ip: "192.241.0.1",
-      ip_set_time: Date.now(),
-      current_location: "4184 Berkshire Circle, Chattanooga, TN",
-      target_location: "4184 Berkshire Circle, Chattanooga, TN",
-      isTraveling: false,
-      travelStartTime: null,
-      travelDuration: 0,
-      device_info: "Windows 11 | Ryzen 7 5800X | RTX 3070",
-      energyLevel: getRandomInt(50, 90),
-      phone_battery: getRandomInt(50, 80),
-      phoneCharging: false,
-      current_activity: "Initializing",
-      activity_start_time: Date.now(),
-      activity_duration: 0,
-      persistentHeartRate: getRandomInt(60, 80),
-      persistentBodyTemp: 36.5 + (Math.random() - 0.5),
-      lastUpdateTime: Date.now()
-    };
+    // Merge loaded state with defaults so that every key exists.
+    let loadedState = loadState();
+    simulationState = Object.assign(getDefaultState(), loadedState || {});
 
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
@@ -208,7 +213,6 @@
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
-
       // Override: if energy is 0, then rest.
       if (simulationState.energyLevel <= 0) {
         return "Resting - Energy depleted, taking a break";
@@ -245,7 +249,7 @@
           return "💻 Working on Doors";
         }
       }
-      // Lunch: for grocery trips, ensure user is at home.
+      // Lunch: force commute home if not at home.
       if (hour >= 12 && hour < 13) {
         if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
           return "🚗 Commuting home before lunch";
@@ -287,7 +291,6 @@
       simulationState.lastUpdateTime = now;
       return dt;
     }
-
     // Update IP and possibly trigger travel.
     function updateIPAndLocation(now) {
       if (now - simulationState.ip_set_time >= 5 * 60 * 1000) {
@@ -313,7 +316,7 @@
         }
       }
     }
-    // Update travel state if duration elapsed.
+    // Update travel state if travel duration elapsed.
     function updateTravel(now) {
       if (simulationState.isTraveling) {
         if (now - simulationState.travelStartTime >= simulationState.travelDuration) {
@@ -498,8 +501,6 @@
       }
       document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${locationDisplay}`;
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
-      
-      // When traveling, force usage mode to "Car".
       let usageMode = simulationState.isTraveling ? "Car" :
                       (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random() < 0.5 ? "PC" : "Phone"));
       let openApps = (usageMode === "PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
@@ -512,7 +513,6 @@
       let headphoneVolume = headphoneStatus === "🎧 On" ? `${getRandomInt(10, 100)}%` : "N/A";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
-      // If in a car or resting, keystrokes are 0.
       let keystrokes = simulationState.isTraveling || simulationState.current_activity.includes("Resting") ? 0 : getRandomInt(50,200);
       document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
@@ -532,9 +532,9 @@
     /* ---------------- Main Update Interval ---------------- */
     function updateSlowMetrics() {
       tryToBecomeLeader();
-      // Always load current state so that nothing resets on refresh.
+      // Load stored state and merge with defaults to ensure all keys.
       let storedState = loadState();
-      if (storedState) simulationState = storedState;
+      simulationState = Object.assign(getDefaultState(), storedState || {});
       const now = Date.now();
       const dtMinutes = computeDeltaTime();
       const sleepStatus = getSleepStatus();
@@ -553,8 +553,6 @@
     updateTimeField();
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
-
-    // Save state on page unload.
     window.addEventListener("beforeunload", function() {
       saveState(simulationState);
     });
