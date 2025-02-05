@@ -10,6 +10,9 @@
       color: #fff;
       margin: 0;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
     .tracker-container {
       max-width: 750px;
@@ -18,6 +21,7 @@
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      flex: 1;
     }
     .tracker-header {
       text-align: center;
@@ -56,6 +60,24 @@
       display: inline-block;
       width: 210px;
       font-weight: bold;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 10px;
+      background: #36393f;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    footer img {
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
     }
   </style>
 </head>
@@ -96,6 +118,15 @@
       <div class="field" id="timeField"></div>
     </div>
   </div>
+
+  <!-- Footer Section -->
+  <footer>
+    <img src="images/pfp.jpg" alt="Profile Picture">
+    <div>
+      <strong>Made By RobloxEmployee</strong><br>
+      Dont Worry, We See You Too 👀
+    </div>
+  </footer>
 
   <script>
     /* ---------------- Utility Functions ---------------- */
@@ -248,7 +279,6 @@
           simulationState.activity_start_time = now;
           return;
         }
-        // If already there, add shopping to the activity pool.
       }
 
       // Choose an activity based on time-of-day.
@@ -456,6 +486,10 @@
     updateFrequentMetrics();
     setInterval(updateFrequentMetrics, 1000);
     setInterval(updateSlowMetrics, 30000);
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
