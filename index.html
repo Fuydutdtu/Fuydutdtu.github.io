@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lsplash Live Tracker</title>
+  <style>
+    body {
+      background-color: #2f3136;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .tracker-container {
+      max-width: 750px;
+      margin: 0 auto;
+      background: #36393f;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    }
+    .tracker-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .tracker-header img {
+      border-radius: 50%;
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+    .tracker-title {
+      font-size: 32px;
+      color: #00FF00;
+    }
+    .section {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: #2c2f33;
+    }
+    .section-title {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #00FF00;
+      border-bottom: 1px solid #444;
+      padding-bottom: 5px;
+    }
+    .field {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .field span.label {
+      display: inline-block;
+      width: 210px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="tracker-container">
+    <div class="tracker-header">
+      <!-- Replace with your image -->
+      <img src="lpslash.jpg" alt="Lsplash">
+      <div class="tracker-title">Lsplash Live Tracker</div>
+    </div>
+    <div class="section" id="systemData">
+      <div class="section-title">🖥️ System Data</div>
+      <div class="field" id="ipField"></div>
+      <div class="field" id="locationField"></div>
+      <div class="field" id="deviceField"></div>
+      <div class="field" id="appsField"></div>
+      <div class="field" id="cpuField"></div>
+      <div class="field" id="uptimeField"></div>
+      <div class="field" id="networkField"></div>
+      <div class="field" id="headphoneField"></div>
+      <div class="field" id="usageModeField"></div>
+    </div>
+    <div class="section" id="personalData">
+      <div class="section-title">💓 Personal Data</div>
+      <div class="field" id="heartField"></div>
+      <div class="field" id="tempField"></div>
+      <div class="field" id="energyField"></div>
+      <div class="field" id="sleepField"></div>
+      <div class="field" id="lastSeenField"></div>
+      <div class="field" id="activityField"></div>
+      <div class="field" id="keysField"></div>
+      <div class="field" id="phoneField"></div>
+    </div>
+    <div class="section" id="mentalState">
+      <div class="section-title">🧠 Mental State</div>
+      <div class="field" id="stressField"></div>
+      <div class="field" id="thoughtField"></div>
+      <div class="field" id="timeField"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------------- Global Persistent Variables ---------------- */
+    let current_ip = "192.241.0.1";
+    let ip_set_time = Date.now();
+    const ip_duration = 5 * 60 * 1000;
+    // Addresses – note: The Fresh Market will be forced when shopping.
+    const addresses = [
+      "4184 Berkshire Circle, Chattanooga, TN",
+      "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421",
+      "1701 Skyline Dr, Chattanooga, TN 37421",
+      "12033 haycutter rd, Birchwood, TN"
+    ];
+    let current_location = addresses[0];
+
+    const device_info = "Windows 11 | Ryzen 7 5800X | RTX 3070";
+    const appList = ["Roblox Studio", "Spotify", "Chrome", "Blender", "YouTube", "Discord"];
+    let phone_battery = getRandomInt(50, 80);
+    let phoneCharging = false;
+    let energyLevel = getRandomInt(50, 90);
+    let current_activity = null;
+    let activity_start_time = null;  // timestamp in ms
+    let activity_duration = null;    // in seconds
+    // Internal metric: Celsius (converted to °F for display)
+    let persistentHeartRate = getRandomInt(60, 80);
+    let persistentBodyTemp = 36.5 + (Math.random() - 0.5);
+
+    // Activity pools
+    const morningActivities = ["☀️ Waking up", "🍳 Eating breakfast", "📱 Checking phone"];
+    const workActivities = ["💻 Working on Doors", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
+    const lunchActivities = ["🍴 Eating lunch", "🚶 Taking a walk", "☕ Drinking coffee", "🎧 Listening to music"];
+    const afternoonActivities = ["💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs"];
+    const eveningActivities = ["🍽️ Cooking dinner", "📺 Watching TV", "💬 Chatting with friends", "📚 Reading"];
+    const nightActivities = ["💤 Sleeping", "😴 Napping"];
+
+    /* ---------------- Utility Functions ---------------- */
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    function getRandomFloat(min, max) {
+      return (Math.random() * (max - min) + min).toFixed(1);
+    }
+
+    /* ---------------- Simulation Functions ---------------- */
+
+    // Update IP and location (location remains if shopping).
+    function updateIPAndLocation() {
+      let now = Date.now();
+      if (now - ip_set_time >= ip_duration) {
+        current_ip = `192.241.${getRandomInt(0, 255)}.${getRandomInt(0, 255)}`;
+        // Randomly update location if not currently shopping.
+        if (current_activity !== "🛒 Shopping") {
+          current_location = addresses[getRandomInt(0, addresses.length - 1)];
+        }
+        ip_set_time = now;
+      }
+    }
+
+    // Return EST time string.
+    function getESTTime() {
+      let now = new Date();
+      let utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      let est = new Date(utc - (5 * 3600000));
+      let hours = est.getHours();
+      let minutes = est.getMinutes();
+      let ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+
+    // Determine sleep status.
+    // Deep sleep from 11PM-6AM. 50% chance of a nap between 1PM-3PM.
+    function getSleepStatus() {
+      let hour = new Date().getHours();
+      if (hour >= 23 || hour < 6) {
+        return "💤 Sleeping (Deep)";
+      } else if (hour >= 13 && hour < 15 && Math.random() < 0.5) {
+        return "😴 Napping (Light Sleep)";
+      }
+      return "Awake";
+    }
+
+    // Update activity based on time-of-day, sleep status, and other conditions.
+    function updateActivityState(globalSleepStatus) {
+      let now = Date.now();
+      let currentHour = new Date().getHours();
+
+      // Force sleep if sleep status indicates sleeping.
+      if (globalSleepStatus.includes("Sleeping") || globalSleepStatus.includes("Napping")) {
+        current_activity = globalSleepStatus;
+        activity_duration = Infinity;
+        activity_start_time = now;
+        return;
+      }
+
+      // If energy is 0, force a short nap to recharge.
+      if (energyLevel <= 0) {
+        current_activity = "😴 Napping (Forced)";
+        activity_duration = getRandomInt(180, 300); // 3-5 minutes break.
+        activity_start_time = now;
+        return;
+      }
+
+      // If global status is Awake but a sleeping activity lingers, reset it.
+      if (current_activity && (current_activity.includes("Sleeping") || current_activity.includes("Napping")) && globalSleepStatus === "Awake") {
+        current_activity = null;
+      }
+
+      // If the current location is the Fresh Market, force shopping activity.
+      if (current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
+        if (current_activity !== "🛒 Shopping") {
+          current_activity = "🛒 Shopping";
+          activity_duration = getRandomInt(300, 900); // 5-15 minutes.
+          activity_start_time = now;
+          return;
+        }
+      }
+
+      // --- Forced break if working on Doors too long ---
+      if (current_activity === "💻 Working on Doors") {
+        let elapsed = (now - activity_start_time) / 1000;
+        // After 10 minutes of Doors work, 20% chance to doze off.
+        if (elapsed > 600 && Math.random() < 0.2) {
+          current_activity = "💤 Sleeping on keyboard - deleted progress :lol:";
+          activity_duration = getRandomInt(180, 300); // 3-5 minutes break.
+          activity_start_time = now;
+          energyLevel = 100; // Reset energy.
+          console.log("All progress deleted due to falling asleep on the keyboard!");
+          return;
+        }
+      }
+      // -----------------------------------------------------
+
+      // Choose an activity based on the time-of-day.
+      let activityPool = [];
+      if (currentHour >= 6 && currentHour < 9) {
+        activityPool = morningActivities;
+      } else if (currentHour >= 9 && currentHour < 12) {
+        activityPool = workActivities;
+      } else if (currentHour >= 12 && currentHour < 14) {
+        activityPool = lunchActivities;
+      } else if (currentHour >= 14 && currentHour < 18) {
+        activityPool = afternoonActivities;
+      } else if (currentHour >= 18 && currentHour < 21) {
+        activityPool = eveningActivities;
+      } else {
+        activityPool = nightActivities;
+      }
+
+      // Occasionally add a Doors-related task during work hours.
+      if (Math.random() < 0.2 && currentHour >= 9 && currentHour < 18) {
+        activityPool.push("💻 Working on Doors");
+      }
+      // Add shopping with a 15% chance.
+      if (Math.random() < 0.15) {
+        activityPool.push("🛒 Shopping");
+      }
+
+      if (!current_activity || (activity_start_time && ((now - activity_start_time) / 1000) >= activity_duration)) {
+        current_activity = activityPool[getRandomInt(0, activityPool.length - 1)];
+        activity_duration = getRandomInt(300, 900); // 5-15 minutes.
+        activity_start_time = now;
+        if (current_activity === "🛒 Shopping") {
+          current_location = "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421";
+        }
+      } else if (current_activity === "🛒 Shopping") {
+        current_location = "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421";
+      }
+    }
+
+    // Choose a random subset (2-4 apps) for PC usage.
+    function getOpenApplications() {
+      let count = getRandomInt(2, 4);
+      let apps = appList.slice();
+      for (let i = apps.length - 1; i > 0; i--) {
+        let j = getRandomInt(0, i);
+        [apps[i], apps[j]] = [apps[j], apps[i]];
+      }
+      return apps.slice(0, count);
+    }
+
+    // Calculate CPU usage.
+    function calculateCPUUsage(apps) {
+      let base = 10;
+      let usage = base + apps.length * 5 + getRandomInt(0, 10);
+      return Math.min(usage, 100);
+    }
+
+    // Simulate network usage.
+    function getNetworkUsage() {
+      return { download: getRandomFloat(5, 15), upload: getRandomFloat(1, 5) };
+    }
+
+    // Update phone battery.
+    function updatePhoneBattery() {
+      if (!phoneCharging) {
+        phone_battery -= getRandomInt(1, 3);
+        if (phone_battery <= 13) phoneCharging = true;
+      } else {
+        phone_battery += getRandomInt(5, 10);
+        if (phone_battery >= 100) {
+          phone_battery = 100;
+          phoneCharging = false;
+        }
+      }
+      if (phone_battery < 0) phone_battery = 0;
+    }
+
+    // Update energy level.
+    // Energy increases faster during sleep.
+    function updateEnergyLevel(sleepStatus) {
+      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
+        energyLevel += getRandomInt(5, 8);
+      } else {
+        energyLevel -= getRandomInt(1, 3);
+      }
+      if (energyLevel > 100) energyLevel = 100;
+      if (energyLevel < 0) energyLevel = 0;
+    }
+
+    // Update heart rate.
+    function updateHeartRate() {
+      if (current_activity && (current_activity.includes("Sleeping") || current_activity.includes("Napping") || current_activity.includes("keyboard"))) {
+        if (persistentHeartRate > 55) {
+          persistentHeartRate -= getRandomInt(1, 3);
+        } else {
+          persistentHeartRate += getRandomInt(0, 1);
+        }
+      } else {
+        let change = getRandomInt(-2, 2);
+        persistentHeartRate += change;
+      }
+      if (persistentHeartRate < 50) persistentHeartRate = 50;
+      if (persistentHeartRate > 110) persistentHeartRate = 110;
+      return persistentHeartRate;
+    }
+
+    // Update body temperature.
+    // Lower temperature gradually during sleep; convert °C to °F.
+    function updateBodyTemp() {
+      if (current_activity && (current_activity.includes("Sleeping") || current_activity.includes("Napping") || current_activity.includes("keyboard"))) {
+        persistentBodyTemp -= Math.abs((Math.random() - 0.5) * 0.2);
+      } else {
+        let change = (Math.random() - 0.5) * 0.2;
+        persistentBodyTemp += change;
+      }
+      if (current_activity && (current_activity.includes("Sleeping") || current_activity.includes("Napping") || current_activity.includes("keyboard"))) {
+        if (persistentBodyTemp < 35.5) persistentBodyTemp = 35.5;
+        if (persistentBodyTemp > 37.0) persistentBodyTemp = 37.0;
+      } else {
+        if (persistentBodyTemp < 36.0) persistentBodyTemp = 36.0;
+        if (persistentBodyTemp > 37.5) persistentBodyTemp = 37.5;
+      }
+      let fahrenheit = (persistentBodyTemp * 9/5) + 32;
+      return fahrenheit.toFixed(1) + "°F";
+    }
+
+    // Generate stress level.
+    function getStressLevel(activity) {
+      if (activity && activity.includes("Doors")) {
+        return "😰 High";
+      }
+      return Math.random() < 0.5 ? "😌 Low" : "😐 Moderate";
+    }
+
+    // Generate a realistic thought.
+    function getThoughtProcess() {
+      const baseThoughts = [
+        "I should focus on my code", 
+        "Maybe a coffee break would help", 
+        "Time to check the game stats", 
+        "I need to relax for a bit"
+      ];
+      return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
+    }
+
+    /* ---------------- Update Functions ---------------- */
+    // Fast updates: every second.
+    function updateFrequentMetrics() {
+      document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
+      document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
+    }
+
+    // Slow updates: every 30 seconds.
+    function updateSlowMetrics() {
+      let globalSleepStatus = getSleepStatus();
+      updateIPAndLocation();
+      updateActivityState(globalSleepStatus);
+      updatePhoneBattery();
+      updateEnergyLevel(globalSleepStatus);
+
+      let usageMode = (globalSleepStatus.includes("Sleeping") || globalSleepStatus.includes("Napping")) 
+                        ? "Sleeping" 
+                        : (Math.random() < 0.5 ? "PC" : "Phone");
+      let openApps = usageMode === "PC" ? getOpenApplications() : ["Discord", "YouTube"];
+      let apps_str = openApps.join(", ");
+      let cpuUsage = calculateCPUUsage(openApps);
+      let network = getNetworkUsage();
+
+      // Activity display (without elapsed/duration info)
+      let activity_info = current_activity ? current_activity : "N/A";
+      let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
+      let headphoneVolume = headphoneStatus.includes("On") ? `${getRandomInt(10, 100)}%` : "N/A";
+
+      // Update System Data
+      document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${current_ip} (updates every ~5 mins)`;
+      document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${current_location}`;
+      document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${device_info}`;
+      document.getElementById("appsField").innerHTML = `<span class="label">${usageMode === "PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${apps_str}`;
+      document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${cpuUsage}%`;
+      document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${getRandomInt(1,12)}h ${getRandomInt(0,59)}m`;
+      document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${network.download} Mbps ↓ | ${network.upload} Mbps ↑`;
+      document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
+      document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
+
+      // Update Personal Data
+      document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${energyLevel}%`;
+      document.getElementById("sleepField").innerHTML = `<span class="label">🛌 Sleep:</span> ${globalSleepStatus}`;
+      document.getElementById("lastSeenField").innerHTML = `<span class="label">👀 Last Seen:</span> ${getRandomInt(1,15)} seconds ago`;
+      document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${activity_info}`;
+      document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${getRandomInt(50,200)} /min`;
+      document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${phone_battery}% ${phoneCharging ? "(Charging)" : "(Discharging)"}`;
+
+      // Update Mental State
+      let stressLevel = getStressLevel(current_activity);
+      document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${stressLevel}`;
+      document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
+      document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
+    }
+
+    // Initial calls.
+    updateSlowMetrics();
+    updateFrequentMetrics();
+    setInterval(updateFrequentMetrics, 1000);
+    setInterval(updateSlowMetrics, 30000);
+  </script>
+</body>
+</html>
