@@ -140,6 +140,10 @@
     }
 
     /* ---------------- Location & Activity Data ---------------- */
+    // Travel times (in ms):
+    // Grocery Store: 8.5 minutes (510,000 ms)
+    // Redibles House: 9 minutes (540,000 ms)
+    // Jasper's House: 46 minutes (2,760,000 ms)
     const locationMapping = {
       "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
       "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
@@ -220,8 +224,9 @@
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
+      // If energy is 0, return "Break Time" (a sub-activity will be appended later)
       if (simulationState.energyLevel <= 0) {
-        return "Break Time";  // We'll later append a sub-activity for break.
+        return "Break Time";
       }
       if (simulationState.current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
         return "🛒 Shopping";
@@ -300,7 +305,7 @@
             simulationState.isTraveling = true;
             simulationState.travelStartTime = now;
             let mapping = locationMapping[newTarget];
-            simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180, 600) * 1000;
+            simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180,600)*1000;
           }
         }
       }
@@ -358,7 +363,7 @@
         let mapping = locationMapping[simulationState.target_location];
         let elapsed = now - simulationState.travelStartTime;
         let remaining = simulationState.travelDuration - elapsed;
-        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${remaining > 0 ? Math.ceil(remaining / 60000) : 0} min)`;
+        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${remaining > 0 ? Math.ceil(remaining/60000) : 0} min)`;
         simulationState.activity_duration = simulationState.travelDuration;
         simulationState.activity_start_time = simulationState.travelStartTime;
         return;
@@ -378,7 +383,7 @@
           simulationState.isTraveling = true;
           simulationState.travelStartTime = now;
           let mapping = locationMapping[simulationState.target_location];
-          simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180, 600) * 1000;
+          simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180,600)*1000;
           simulationState.current_activity = scheduled;
           simulationState.activity_duration = simulationState.travelDuration;
           simulationState.activity_start_time = now;
@@ -386,7 +391,7 @@
         }
       }
       simulationState.current_activity = scheduled;
-      simulationState.activity_duration = getRandomInt(300, 900);
+      simulationState.activity_duration = getRandomInt(300,900);
       simulationState.activity_start_time = now;
     }
     function updatePhoneBattery(dtMinutes) {
@@ -415,9 +420,9 @@
     function updateHeartRate() {
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -getRandomInt(1, 3) : getRandomInt(0, 1);
+        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -getRandomInt(1,3) : getRandomInt(0,1);
       } else {
-        simulationState.persistentHeartRate += getRandomInt(-2, 2);
+        simulationState.persistentHeartRate += getRandomInt(-2,2);
       }
       simulationState.persistentHeartRate = Math.min(Math.max(simulationState.persistentHeartRate, 50), 110);
       return simulationState.persistentHeartRate;
@@ -425,22 +430,22 @@
     function updateBodyTemp() {
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentBodyTemp -= Math.abs((Math.random() - 0.5) * 0.2);
+        simulationState.persistentBodyTemp -= Math.abs((Math.random()-0.5)*0.2);
       } else {
-        simulationState.persistentBodyTemp += (Math.random() - 0.5) * 0.2;
+        simulationState.persistentBodyTemp += (Math.random()-0.5)*0.2;
       }
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp, 35.5), 37.0);
+        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,35.5),37.0);
       } else {
-        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp, 36.0), 37.5);
+        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,36.0),37.5);
       }
-      let fahrenheit = (simulationState.persistentBodyTemp * 9/5) + 32;
-      return fahrenheit.toFixed(1) + "°F";
+      let fahrenheit = (simulationState.persistentBodyTemp * 9/5)+32;
+      return fahrenheit.toFixed(1)+"°F";
     }
     function getStressLevel(activity) {
       if (activity && activity.includes("Doors") && !activity.includes("Traveling")) return "😰 High";
-      return activity && activity.includes("Traveling") ? "😐 Moderate" : (Math.random() < 0.5 ? "😌 Low" : "😐 Moderate");
+      return activity && activity.includes("Traveling") ? "😐 Moderate" : (Math.random()<0.5 ? "😌 Low" : "😐 Moderate");
     }
     function getThoughtProcess() {
       if (simulationState.current_activity && simulationState.current_activity.includes("Traveling")) {
@@ -472,22 +477,35 @@
       console.log("Updating display...");
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
       let locationDisplay = simulationState.isTraveling 
-        ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime)) / 60000)} min)`
+        ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000)} min)`
         : simulationState.current_location;
       document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${locationDisplay}`;
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
       let usageMode = simulationState.isTraveling ? "Car" :
-                      (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random() < 0.5 ? "PC" : "Phone"));
-      let openApps = (usageMode === "PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
-      document.getElementById("appsField").innerHTML = `<span class="label">${usageMode === "PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
-      document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10, 50)}%`;
+                      (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random()<0.5 ? "PC" : "Phone"));
+      let openApps = (usageMode==="PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
+      document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
+      document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
       document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${getRandomInt(1,12)}h ${getRandomInt(0,59)}m`;
       let network = { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) };
       document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${network.download} Mbps ↓ | ${network.upload} Mbps ↑`;
-      let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
-      let headphoneVolume = headphoneStatus === "🎧 On" ? `${getRandomInt(10, 100)}%` : "N/A";
+      let headphoneStatus = Math.random()<0.5 ? "🎧 On" : "❌ Off";
+      let headphoneVolume = headphoneStatus==="🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
+      
+      // If traveling, update the activity text with ETA.
+      let activityDisplay = simulationState.current_activity;
+      if(simulationState.isTraveling) {
+        let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
+        // If commuting home, show "Commuting home (ETA: X min)"
+        if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
+          activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
+        } else {
+          activityDisplay = simulationState.current_activity + " (ETA: " + eta + " min)";
+        }
+      }
+      document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${activityDisplay}`;
       let keystrokes = simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break") || simulationState.current_activity.toLowerCase().includes("snack")
                         ? 0 : getRandomInt(50,200);
       document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
@@ -496,7 +514,6 @@
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
       document.getElementById("sleepField").innerHTML = `<span class="label">🛌 Sleep:</span> ${getSleepStatus()}`;
       document.getElementById("lastSeenField").innerHTML = `<span class="label">👀 Last Seen:</span> ${getRandomInt(1,15)} seconds ago`;
-      document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${simulationState.current_activity}`;
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${Math.round(simulationState.phone_battery)}% ${simulationState.phoneCharging ? "(Charging)" : "(Discharging)"}`;
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
       document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
