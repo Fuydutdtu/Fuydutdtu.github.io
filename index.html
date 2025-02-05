@@ -115,6 +115,7 @@
       <div class="section-title">🧠 Mental State</div>
       <div class="field" id="stressField"></div>
       <div class="field" id="thoughtField"></div>
+      <!-- EST Time updates every second -->
       <div class="field" id="timeField"></div>
     </div>
   </div>
@@ -137,19 +138,23 @@
       return (Math.random() * (max - min) + min).toFixed(1);
     }
 
-    /* ---------------- Persistent State Setup ---------------- */
-    const addresses = [
-      "4184 Berkshire Circle, Chattanooga, TN",
-      "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421",
-      "1701 Skyline Dr, Chattanooga, TN 37421",
-      "12033 haycutter rd, Birchwood, TN"
-    ];
-    const morningActivities = ["☀️ Waking up", "🍳 Eating breakfast", "📱 Checking phone"];
-    const workActivities = ["💻 Working on Doors", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
-    const lunchActivities = ["🍴 Eating lunch", "🚶 Taking a walk", "☕ Drinking coffee", "🎧 Listening to music"];
-    const afternoonActivities = ["💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs"];
-    const eveningActivities = ["🍽️ Cooking dinner", "📺 Watching TV", "💬 Chatting with friends", "📚 Reading"];
-    const nightActivities = ["💤 Sleeping", "😴 Napping"];
+    /* ---------------- Location Data & Persistent Setup ---------------- */
+    // Define addresses with descriptions and travel times (in milliseconds).
+    const locationMapping = {
+      "4184 Berkshire Circle, Chattanooga, TN": { description: "His House", travelTime: 0 },
+      "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", distance: 4.82, travelTime: 10 * 60 * 1000 },
+      "1701 Skyline Dr, Chattanooga, TN 37421": { description: "Redibles House", distance: 5.00, travelTime: 10 * 60 * 1000 },
+      "12033 Haycutter Rd, Birchwood, TN": { description: "Jasper's House", distance: 26.93, travelTime: 54 * 60 * 1000 }
+    };
+    const addresses = Object.keys(locationMapping);
+
+    // Daily activity pools (fallbacks).
+    const morningActivities = ["☀️ Waking up", "Showering and getting ready"];
+    const workActivities = ["💻 Working on Doors", "Falling asleep at the keyboard"];
+    const lunchActivities = ["🍴 Lunch break"];
+    const afternoonActivities = ["💻 Continuing work on Doors", "Falling asleep at work (brief nap)"];
+    const eveningActivities = ["🍽️ Having dinner", "Showering", "📺 Relaxing and unwinding", "Playing games"];
+    const nightActivities = ["💤 Sleeping"];
 
     function loadState() {
       let stateStr = localStorage.getItem("simulationState");
@@ -162,8 +167,8 @@
     let simulationState = loadState() || {
       current_ip: "192.241.0.1",
       ip_set_time: Date.now(),
-      current_location: addresses[0],
-      target_location: addresses[0],
+      current_location: "4184 Berkshire Circle, Chattanooga, TN",
+      target_location: "4184 Berkshire Circle, Chattanooga, TN",
       isTraveling: false,
       travelStartTime: null,
       travelDuration: 0,
@@ -181,7 +186,6 @@
     /* ---------------- Leader Election Setup ---------------- */
     const LEADER_TIMEOUT = 2000; // 2 seconds
     const myTabId = Date.now() + "-" + Math.random();
-
     function isLeader() {
       return localStorage.getItem("simulationLeader") === myTabId;
     }
@@ -200,26 +204,88 @@
       }
     }
 
+    /* ---------------- AI-Enhanced Daily Routine ---------------- */
+    // Returns a realistic activity based on the hour.
+    function getScheduledActivity() {
+      const now = new Date();
+      const hour = now.getHours();
+      // Morning routine.
+      if (hour >= 6 && hour < 7) {
+        return Math.random() < 0.5 ? "Waking up" : "Showering and getting ready";
+      } else if (hour >= 7 && hour < 8) {
+        return "Having breakfast";
+      } else if (hour >= 8 && hour < 9) {
+        // 20% chance to work from another dev's house.
+        if (Math.random() < 0.2) {
+          return Math.random() < 0.5 ? "🚗 Commuting to work at Redibles House" : "🚗 Commuting to work at Jasper's House";
+        }
+        return "Starting work on Doors from home";
+      } else if (hour >= 9 && hour < 12) {
+        // 10% chance to simulate falling asleep.
+        if (Math.random() < 0.1) {
+          return "Falling asleep at the keyboard";
+        }
+        // Work period: if at home, work from home; if at another location, collaborate.
+        if (simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN") {
+          return "💻 Working on Doors from home";
+        } else if (simulationState.current_location === "1701 Skyline Dr, Chattanooga, TN 37421") {
+          return "🤝 Collaborating at Redibles House";
+        } else if (simulationState.current_location === "12033 Haycutter Rd, Birchwood, TN") {
+          return "🤝 Meeting with Jasper";
+        } else {
+          return "💻 Working on Doors";
+        }
+      } else if (hour >= 12 && hour < 13) {
+        // 30% chance to go to the grocery store.
+        if (Math.random() < 0.3) {
+          return "🚗 Commuting to the grocery store";
+        }
+        return "🍴 Lunch break at home";
+      } else if (hour >= 13 && hour < 17) {
+        if (Math.random() < 0.1) {
+          return "Falling asleep at work (brief nap)";
+        }
+        if (simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN") {
+          return "💻 Continuing work on Doors from home";
+        }
+        return "💻 Collaborating on Doors";
+      } else if (hour >= 17 && hour < 18) {
+        return "🚗 Commuting home";
+      } else if (hour >= 18 && hour < 19) {
+        return "🍽️ Having dinner";
+      } else if (hour >= 19 && hour < 20) {
+        return "Showering";
+      } else if (hour >= 20 && hour < 22) {
+        return "📺 Relaxing and unwinding";
+      } else {
+        return "💤 Sleeping";
+      }
+    }
+
     /* ---------------- Simulation Functions ---------------- */
     const ip_duration = 5 * 60 * 1000; // 5 minutes
-
     function updateIPAndLocation() {
       let now = Date.now();
       if (now - simulationState.ip_set_time >= ip_duration) {
         simulationState.current_ip = `192.241.${getRandomInt(0, 255)}.${getRandomInt(0, 255)}`;
         simulationState.ip_set_time = now;
       }
+      // If not already traveling and activity implies commuting, the updateActivityState() will set target_location.
+      // Otherwise, sometimes pick a random new location (for non-work travel).
       if (!simulationState.isTraveling && simulationState.current_activity !== "🛒 Shopping") {
-        let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
-        if (newTarget !== simulationState.current_location) {
-          simulationState.target_location = newTarget;
-          simulationState.isTraveling = true;
-          simulationState.travelStartTime = now;
-          simulationState.travelDuration = getRandomInt(180, 600) * 1000;
+        // With a small chance, update location randomly (if not commuting).
+        if (Math.random() < 0.05) {
+          let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
+          if (newTarget !== simulationState.current_location) {
+            simulationState.target_location = newTarget;
+            simulationState.isTraveling = true;
+            simulationState.travelStartTime = now;
+            let mapping = locationMapping[newTarget];
+            simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180, 600) * 1000;
+          }
         }
       }
     }
-
     function updateTravel() {
       if (simulationState.isTraveling) {
         let now = Date.now();
@@ -229,7 +295,6 @@
         }
       }
     }
-
     function getESTTime() {
       let now = new Date();
       let utc = now.getTime() + now.getTimezoneOffset() * 60000;
@@ -242,7 +307,6 @@
       minutes = minutes < 10 ? '0' + minutes : minutes;
       return `${hours}:${minutes} ${ampm}`;
     }
-
     function getSleepStatus() {
       let hour = new Date().getHours();
       if (hour >= 23 || hour < 6) {
@@ -252,7 +316,7 @@
       }
       return "Awake";
     }
-
+    // Update activity state using the scheduled activity and, if commuting, compute travel details.
     function updateActivityState(globalSleepStatus) {
       let now = Date.now();
       if (globalSleepStatus.includes("Sleeping") || globalSleepStatus.includes("Napping")) {
@@ -261,56 +325,36 @@
         simulationState.activity_start_time = now;
         return;
       }
-      if (simulationState.isTraveling) {
-        let remaining = simulationState.travelDuration - (now - simulationState.travelStartTime);
-        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil(remaining/60000)} min)`;
-        simulationState.activity_duration = simulationState.travelDuration;
-        simulationState.activity_start_time = simulationState.travelStartTime;
-        return;
-      }
-      if (simulationState.energyLevel <= 0) {
-        simulationState.current_activity = "😴 Napping (Forced)";
-        simulationState.activity_duration = getRandomInt(180, 300);
-        simulationState.activity_start_time = now;
-        return;
-      }
-      if (Math.random() < 0.15) {
+      const scheduled = getScheduledActivity();
+      // Check for commuting phrases and set target_location accordingly.
+      if (scheduled.includes("Commuting to work at Redibles House")) {
+        simulationState.target_location = "1701 Skyline Dr, Chattanooga, TN 37421";
+      } else if (scheduled.includes("Commuting to work at Jasper's House")) {
+        simulationState.target_location = "12033 Haycutter Rd, Birchwood, TN";
+      } else if (scheduled.includes("Commuting to the grocery store")) {
         simulationState.target_location = "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421";
-        if (simulationState.current_location !== simulationState.target_location) {
-          simulationState.isTraveling = true;
-          simulationState.travelStartTime = now;
-          simulationState.travelDuration = getRandomInt(300, 900) * 1000;
-          simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil(simulationState.travelDuration/60000)} min)`;
-          simulationState.activity_duration = simulationState.travelDuration;
-          simulationState.activity_start_time = now;
-          return;
-        }
-      }
-      let currentHour = new Date().getHours();
-      let activityPool = [];
-      if (currentHour >= 6 && currentHour < 9) {
-        activityPool = morningActivities;
-      } else if (currentHour >= 9 && currentHour < 12) {
-        activityPool = workActivities;
-      } else if (currentHour >= 12 && currentHour < 14) {
-        activityPool = lunchActivities;
-      } else if (currentHour >= 14 && currentHour < 18) {
-        activityPool = afternoonActivities;
-      } else if (currentHour >= 18 && currentHour < 21) {
-        activityPool = eveningActivities;
+      } else if (scheduled.includes("Commuting home")) {
+        simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
       } else {
-        activityPool = nightActivities;
+        // Otherwise, remain at current location.
+        simulationState.target_location = simulationState.current_location;
       }
-      if (Math.random() < 0.2 && currentHour >= 9 && currentHour < 18) {
-        activityPool.push("💻 Working on Doors");
-      }
-      if (!simulationState.current_activity || (simulationState.activity_start_time && ((now - simulationState.activity_start_time) / 1000) >= simulationState.activity_duration)) {
-        simulationState.current_activity = activityPool[getRandomInt(0, activityPool.length - 1)];
-        simulationState.activity_duration = getRandomInt(300, 900);
+      // If target differs, initiate travel.
+      if (simulationState.current_location !== simulationState.target_location) {
+        simulationState.isTraveling = true;
+        simulationState.travelStartTime = now;
+        let mapping = locationMapping[simulationState.target_location];
+        simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180, 600) * 1000;
+        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : ""}, ETA: ${Math.ceil(simulationState.travelDuration/60000)} min)`;
+        simulationState.activity_duration = simulationState.travelDuration;
         simulationState.activity_start_time = now;
+        return;
       }
+      // Otherwise, set activity as scheduled.
+      simulationState.current_activity = scheduled;
+      simulationState.activity_duration = getRandomInt(300, 900);
+      simulationState.activity_start_time = now;
     }
-
     function getOpenApplications() {
       let count = getRandomInt(2, 4);
       let apps = ["Roblox Studio", "Spotify", "Chrome", "Blender", "YouTube", "Discord"];
@@ -320,17 +364,14 @@
       }
       return apps.slice(0, count);
     }
-
     function calculateCPUUsage(apps) {
       let base = 10;
       let usage = base + apps.length * 5 + getRandomInt(0, 10);
       return Math.min(usage, 100);
     }
-
     function getNetworkUsage() {
       return { download: getRandomFloat(5, 15), upload: getRandomFloat(1, 5) };
     }
-
     function updatePhoneBattery() {
       if (!simulationState.phoneCharging) {
         simulationState.phone_battery -= getRandomInt(1, 3);
@@ -344,7 +385,6 @@
       }
       if (simulationState.phone_battery < 0) simulationState.phone_battery = 0;
     }
-
     function updateEnergyLevel(sleepStatus) {
       if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
         simulationState.energyLevel += getRandomInt(5, 8);
@@ -354,9 +394,9 @@
       if (simulationState.energyLevel > 100) simulationState.energyLevel = 100;
       if (simulationState.energyLevel < 0) simulationState.energyLevel = 0;
     }
-
     function updateHeartRate() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") || simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
+      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
         if (simulationState.persistentHeartRate > 55) {
           simulationState.persistentHeartRate -= getRandomInt(1, 3);
         } else {
@@ -369,14 +409,15 @@
       if (simulationState.persistentHeartRate > 110) simulationState.persistentHeartRate = 110;
       return simulationState.persistentHeartRate;
     }
-
     function updateBodyTemp() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") || simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
+      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
         simulationState.persistentBodyTemp -= Math.abs((Math.random() - 0.5) * 0.2);
       } else {
         simulationState.persistentBodyTemp += (Math.random() - 0.5) * 0.2;
       }
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") || simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
+      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Napping") || simulationState.current_activity.includes("keyboard"))) {
         if (simulationState.persistentBodyTemp < 35.5) simulationState.persistentBodyTemp = 35.5;
         if (simulationState.persistentBodyTemp > 37.0) simulationState.persistentBodyTemp = 37.0;
       } else {
@@ -386,14 +427,12 @@
       let fahrenheit = (simulationState.persistentBodyTemp * 9/5) + 32;
       return fahrenheit.toFixed(1) + "°F";
     }
-
     function getStressLevel(activity) {
       if (activity && activity.includes("Doors")) {
         return "😰 High";
       }
       return Math.random() < 0.5 ? "😌 Low" : "😐 Moderate";
     }
-
     function getThoughtProcess() {
       const baseThoughts = [
         "I should focus on my code", 
@@ -404,8 +443,9 @@
       return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     }
 
-    /* ---------------- Update Display Functions ---------------- */
-    function updateDisplay() {
+    /* ---------------- Display Update Functions ---------------- */
+    // Updates fields that change every 30 seconds.
+    function updateSlowDisplay() {
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
       let locationDisplay = simulationState.isTraveling 
           ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000)} min)` 
@@ -428,7 +468,6 @@
       let headphoneVolume = headphoneStatus.includes("On") ? `${getRandomInt(10, 100)}%` : "N/A";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
-
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
       document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel}%`;
@@ -439,19 +478,18 @@
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${simulationState.phone_battery}% ${simulationState.phoneCharging ? "(Charging)" : "(Discharging)"}`;
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
       document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
+      // EST Time is updated separately.
+    }
+    // Updates only the EST Time field every second.
+    function updateTimeField() {
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
 
-    /* ---------------- Slow Update (every 30 seconds) ---------------- */
+    /* ---------------- Slow Metrics Update (every 30 seconds) ---------------- */
     function updateSlowMetrics() {
-      // Attempt to become leader if needed.
       tryToBecomeLeader();
-      
-      // Refresh local state from storage.
       let storedState = loadState();
       if (storedState) simulationState = storedState;
-      
-      // Only the leader updates the simulation state.
       if (isLeader()) {
         let sleepStatus = getSleepStatus();
         updateIPAndLocation();
@@ -462,32 +500,14 @@
         saveState(simulationState);
         updateLeaderHeartbeat();
       }
-      updateDisplay();
+      updateSlowDisplay();
     }
-
-    /* ---------------- Frequent Update (every second) ---------------- */
-    function updateFrequentMetrics() {
-      // Just update display from current simulationState.
-      updateDisplay();
-    }
-
-    /* ---------------- Storage Sync ---------------- */
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'simulationState' && event.newValue) {
-        simulationState = JSON.parse(event.newValue);
-        updateDisplay();
-      }
-    });
 
     /* ---------------- Initial Calls and Intervals ---------------- */
     updateSlowMetrics();
-    updateFrequentMetrics();
-    setInterval(updateFrequentMetrics, 1000);
+    updateTimeField();
     setInterval(updateSlowMetrics, 30000);
-  </script>
-</body>
-</html>
-
+    setInterval(updateTimeField, 1000);
   </script>
 </body>
 </html>
