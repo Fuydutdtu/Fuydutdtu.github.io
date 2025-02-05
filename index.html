@@ -159,11 +159,11 @@
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
     }
-    // Initialize with defaults. If any value (like current_location) is missing, default to home.
+    // If no state exists, initialize defaults. Otherwise, use stored state.
     let simulationState = loadState() || {
       current_ip: "192.241.0.1",
       ip_set_time: Date.now(),
-      current_location: "4184 Berkshire Circle, Chattanooga, TN",
+      current_location: "4184 Berkshire Circle, Chattanooga, TN", // default home
       target_location: "4184 Berkshire Circle, Chattanooga, TN",
       isTraveling: false,
       travelStartTime: null,
@@ -176,11 +176,11 @@
       activity_start_time: null,
       activity_duration: 0,
       persistentHeartRate: getRandomInt(60, 80),
-      persistentBodyTemp: 36.5 + (Math.random() - 0.5)
+      persistentBodyTemp: 36.5 + (Math.random() - 0.5),
+      lastUpdateTime: Date.now() // used for dt calculations
     };
-
-    // In case the loaded state is missing the current_location, reset it.
-    if (!simulationState.current_location || typeof simulationState.current_location !== "string") {
+    // Fallback for location if undefined
+    if (!simulationState.current_location) {
       simulationState.current_location = "4184 Berkshire Circle, Chattanooga, TN";
     }
 
@@ -206,25 +206,19 @@
     }
 
     /* ---------------- Logical Activity Scheduler ---------------- */
-    // This routine follows these rules:
-    // 1. If traveling, current_activity remains "Traveling" with an ETA.
-    // 2. If at a specific location (like the grocery store), the activity reflects that.
-    // 3. Only if not in transit does it update to scheduled tasks.
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
-
-      // If already at the grocery store, always show shopping.
+      // If at the grocery store, always show shopping.
       if (simulationState.current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
          return "🛒 Shopping";
       }
-      // Morning
+      // Morning activities
       if (hour >= 6 && hour < 8) {
         return Math.random() < 0.5 ? "☀️ Waking up" : "🚿 Showering & Getting ready";
       }
       // Early work hours
       if (hour >= 8 && hour < 9) {
-        // A chance to work away from home
         if (Math.random() < 0.2) {
           return Math.random() < 0.5 
             ? "🚗 Commuting to work at Redibles House" 
@@ -278,15 +272,14 @@
     }
 
     /* ---------------- Simulation Functions ---------------- */
-    // Update IP every 5 minutes and occasionally trigger a random location update (if not already in transit).
+    // Update IP every 5 minutes and occasionally trigger a location change.
     const ip_duration = 5 * 60 * 1000;
-    function updateIPAndLocation() {
-      let now = Date.now();
+    function updateIPAndLocation(now) {
       if (now - simulationState.ip_set_time >= ip_duration) {
         simulationState.current_ip = `192.241.${getRandomInt(0, 255)}.${getRandomInt(0, 255)}`;
         simulationState.ip_set_time = now;
       }
-      // Only trigger a new travel if not already in transit and not in a fixed location activity (e.g., shopping)
+      // If not traveling and not in a fixed activity, possibly start travel.
       if (!simulationState.isTraveling && simulationState.current_activity !== "🛒 Shopping") {
         if (Math.random() < 0.05) {
           let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
@@ -300,10 +293,9 @@
         }
       }
     }
-    // Update travel: if travel duration has passed, update the current location.
-    function updateTravel() {
+    // Update travel: once travel time elapses, update the location.
+    function updateTravel(now) {
       if (simulationState.isTraveling) {
-        let now = Date.now();
         if (now - simulationState.travelStartTime >= simulationState.travelDuration) {
           simulationState.current_location = simulationState.target_location;
           simulationState.isTraveling = false;
@@ -333,12 +325,9 @@
       }
       return "Awake";
     }
-    // Update the current activity. This function handles state changes so that if a new event (like commuting)
-    // starts, the activity message is updated accordingly.
-    function updateActivityState(sleepStatus) {
-      let now = Date.now();
-
-      // Lock the state if sleeping or napping.
+    // Update the current activity.
+    function updateActivityState(now, sleepStatus) {
+      // If sleeping/napping, lock the state.
       if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
         simulationState.current_activity = sleepStatus;
         simulationState.activity_duration = Infinity;
@@ -355,9 +344,9 @@
         simulationState.activity_start_time = simulationState.travelStartTime;
         return;
       }
-      // Determine the scheduled activity based on the time of day and location.
+      // Otherwise, set the scheduled activity.
       let scheduled = getScheduledActivity();
-      // If the scheduled activity indicates commuting, set the target location accordingly.
+      // If the scheduled activity involves commuting, adjust target.
       if (scheduled.includes("Commuting")) {
         if (scheduled.includes("Redibles")) {
           simulationState.target_location = "1701 Skyline Dr, Chattanooga, TN 37421";
@@ -368,19 +357,17 @@
         } else if (scheduled.includes("home")) {
           simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
         }
-        // If not already at the target location, begin travel.
         if (simulationState.current_location !== simulationState.target_location) {
           simulationState.isTraveling = true;
           simulationState.travelStartTime = now;
           let mapping = locationMapping[simulationState.target_location];
           simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180, 600) * 1000;
-          simulationState.current_activity = scheduled; // Set the commuting message.
+          simulationState.current_activity = scheduled;
           simulationState.activity_duration = simulationState.travelDuration;
           simulationState.activity_start_time = now;
           return;
         }
       }
-      // Otherwise, simply set the scheduled activity.
       simulationState.current_activity = scheduled;
       simulationState.activity_duration = getRandomInt(300, 900);
       simulationState.activity_start_time = now;
@@ -389,7 +376,6 @@
     function getOpenApplications() {
       let count = getRandomInt(2, 4);
       let apps = ["Roblox Studio", "Spotify", "Chrome", "Blender", "YouTube", "Discord"];
-      // Shuffle the apps
       for (let i = apps.length - 1; i > 0; i--) {
         let j = getRandomInt(0, i);
         [apps[i], apps[j]] = [apps[j], apps[i]];
@@ -404,13 +390,16 @@
     function getNetworkUsage() {
       return { download: getRandomFloat(5, 15), upload: getRandomFloat(1, 5) };
     }
-    // Update phone battery logically – note that we force rounding on display.
-    function updatePhoneBattery() {
+    // Update phone battery using elapsed time.
+    function updatePhoneBattery(dtMinutes) {
+      // dtMinutes: minutes since last update
       if (!simulationState.phoneCharging) {
-        simulationState.phone_battery -= getRandomInt(1, 3);
+        // Discharge rate: about 2% per minute.
+        simulationState.phone_battery -= dtMinutes * 2;
         if (simulationState.phone_battery <= 15) simulationState.phoneCharging = true;
       } else {
-        simulationState.phone_battery += getRandomInt(5, 10);
+        // Charge rate: about 5% per minute.
+        simulationState.phone_battery += dtMinutes * 5;
         if (simulationState.phone_battery >= 100) {
           simulationState.phone_battery = 100;
           simulationState.phoneCharging = false;
@@ -418,16 +407,18 @@
       }
       if (simulationState.phone_battery < 0) simulationState.phone_battery = 0;
     }
-    // Update energy level based on sleep status.
-    function updateEnergyLevel(sleepStatus) {
+    // Update energy level using elapsed time.
+    function updateEnergyLevel(dtMinutes, sleepStatus) {
       if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
-        simulationState.energyLevel += getRandomInt(5, 8);
+        // Regain energy: about 4% per minute.
+        simulationState.energyLevel += dtMinutes * 4;
       } else {
-        simulationState.energyLevel -= getRandomInt(1, 3);
+        // Lose energy: about 1% per minute.
+        simulationState.energyLevel -= dtMinutes * 1;
       }
       simulationState.energyLevel = Math.min(Math.max(simulationState.energyLevel, 0), 100);
     }
-    // Update heart rate based on activity.
+    // Update heart rate.
     function updateHeartRate() {
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
@@ -450,7 +441,6 @@
       } else {
         simulationState.persistentBodyTemp += (Math.random() - 0.5) * 0.2;
       }
-      // Clamp temperature based on activity.
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
         simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp, 35.5), 37.0);
@@ -460,7 +450,7 @@
       let fahrenheit = (simulationState.persistentBodyTemp * 9/5) + 32;
       return fahrenheit.toFixed(1) + "°F";
     }
-    // Determine stress level based on activity.
+    // Determine stress level.
     function getStressLevel(activity) {
       if (activity && activity.includes("Doors") && !activity.includes("Traveling")) {
         return "😰 High";
@@ -515,12 +505,11 @@
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
       document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
-      document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel}%`;
+      document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
       document.getElementById("sleepField").innerHTML = `<span class="label">🛌 Sleep:</span> ${getSleepStatus()}`;
       document.getElementById("lastSeenField").innerHTML = `<span class="label">👀 Last Seen:</span> ${getRandomInt(1,15)} seconds ago`;
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${simulationState.current_activity}`;
       document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${getRandomInt(50,200)} /min`;
-      // Ensure the phone battery is shown as an integer value
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${Math.round(simulationState.phone_battery)}% ${simulationState.phoneCharging ? "(Charging)" : "(Discharging)"}`;
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
       document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
@@ -532,24 +521,35 @@
     /* ---------------- Main Update Interval ---------------- */
     function updateSlowMetrics() {
       tryToBecomeLeader();
+      // Load state from localStorage (if available) to ensure persistence.
       let storedState = loadState();
       if (storedState) simulationState = storedState;
-      if (isLeader()) {
-        let sleepStatus = getSleepStatus();
-        updateIPAndLocation();
-        updateTravel();
-        updateActivityState(sleepStatus);
-        updatePhoneBattery();
-        updateEnergyLevel(sleepStatus);
-        saveState(simulationState);
-        updateLeaderHeartbeat();
-      }
+      
+      const now = Date.now();
+      // Compute elapsed time in minutes since last update.
+      let dtMinutes = (now - simulationState.lastUpdateTime) / 60000;
+      if (dtMinutes < 0.001) dtMinutes = 0.001; // avoid zero
+      
+      updateIPAndLocation(now);
+      updateTravel(now);
+      let sleepStatus = getSleepStatus();
+      updateActivityState(now, sleepStatus);
+      updatePhoneBattery(dtMinutes);
+      updateEnergyLevel(dtMinutes, sleepStatus);
+      
+      // Update the last update time to now.
+      simulationState.lastUpdateTime = now;
+      
+      saveState(simulationState);
+      updateLeaderHeartbeat();
       updateSlowDisplay();
     }
 
     /* ---------------- Initial Calls and Intervals ---------------- */
+    // First update on load.
     updateSlowMetrics();
     updateTimeField();
+    // Update metrics every 30 seconds and time display every second.
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
   </script>
