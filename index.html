@@ -146,21 +146,21 @@
 
     /* ---------------- Load External JSON Data ---------------- */
     async function loadJSON(url) {
-  try {
-    let response = await fetch(url);
-    if (response.ok) return await response.json();
-  } catch(e) {
-    console.error("Error loading JSON from", url, e);
-  }
-  return null;
-}
-
-// For GitHub Pages, use relative paths:
-async function loadExternalData() {
-  thoughtsList = await loadJSON('./data/thoughts.json') || [];
-  activitiesList = await loadJSON('./data/activities.json') || [];
-}
-
+      try {
+        let response = await fetch(url);
+        if (response.ok) return await response.json();
+      } catch(e) {
+        console.error("Error loading JSON from", url, e);
+      }
+      return null;
+    }
+    // Load thoughts and activities from files in the /data folder.
+    let thoughtsList = [];
+    let activitiesList = [];
+    async function loadExternalData() {
+      thoughtsList = await loadJSON('./data/thoughts.json') || [];
+      activitiesList = await loadJSON('./data/activities.json') || [];
+    }
     const defaultThoughts = [ 
       "Time to optimize the door collision detection algorithm.",
       "Reviewing the door unlocking logic—tighten security.",
@@ -192,19 +192,21 @@ async function loadExternalData() {
       return getRandomActivity();
     }
 
-    /* ---------------- Fallback for getOpenApplications ---------------- */
-    function getOpenApplications() {
-      // Return a simple list of applications.
-      return ["Roblox Studio", "VSCode", "Discord"];
-    }
-
-    /* ---------------- Schedule Data ---------------- */
+    /* ---------------- Location & Activity Data ---------------- */
+    // Original address mapping with travel times (in ms):
+    // Grocery Store: 8.5 minutes (510,000 ms)
+    // Redibles House: 9 minutes (540,000 ms)
+    // Jasper's House: 46 minutes (2,760,000 ms)
     const locationMapping = {
-      "Home": { description: "Home", travelTime: 0 },
-      "Redibles": { description: "At Redibles", travelTime: 5 * 60000 },
-      "Jasper's House": { description: "At Jasper's House", travelTime: 8 * 60000 }
+      "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
+      "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
+      "1701 Skyline Dr, Chattanooga, TN 37421": { description: "Redibles House", travelTime: 540000 },
+      "12033 Haycutter Rd, Birchwood, TN": { description: "Jasper's House", travelTime: 2760000 }
     };
     const addresses = Object.keys(locationMapping);
+
+    /* ---------------- Detailed Daily Schedule ---------------- */
+    // Times (in minutes since midnight): Wake at 6:30 (390) and sleep at 22:28 (1348)
     const dailySchedule = [
       { start: 390, end: 405, activity: "🚽 Morning Routine: Wake up, bathroom, brush teeth" },
       { start: 405, end: 435, activity: "☕ Breakfast & Daily Planning" },
@@ -224,7 +226,7 @@ async function loadExternalData() {
     /* ---------------- Server-Based State Persistence ---------------- */
     async function loadStateFromServer() {
       try {
-        let response = await fetch('/data/state.json');
+        let response = await fetch('./data/state.json');
         if (response.ok) return await response.json();
       } catch(e) {
         console.error("Error loading state from server:", e);
@@ -233,7 +235,7 @@ async function loadExternalData() {
     }
     async function saveStateToServer(state) {
       try {
-        await fetch('/data/state.json', {
+        await fetch('./data/state.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(state)
@@ -246,8 +248,8 @@ async function loadExternalData() {
       return {
         current_ip: "192.241.0.1",
         ip_set_time: Date.now(),
-        current_location: "Home",
-        target_location: "Home",
+        current_location: "4184 Berkshire Circle, Chattanooga, TN",
+        target_location: "4184 Berkshire Circle, Chattanooga, TN",
         isTraveling: false,
         travelStartTime: null,
         travelDuration: 0,
@@ -278,7 +280,7 @@ async function loadExternalData() {
 
     /* ---------------- Initialization ---------------- */
     async function init() {
-      await loadExternalData(); // load thoughts and activities from files
+      await loadExternalData(); // load thoughts and activities from external files
       simulationState = await loadStateFromServer();
       if (!simulationState) simulationState = getDefaultState();
       simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
@@ -315,11 +317,11 @@ async function loadExternalData() {
     function getScheduledActivity() {
       const nowMin = getMinutesSinceMidnight();
       if (simulationState.energyLevel <= 0) {
-        if (simulationState.current_location !== "Home") {
-          simulationState.target_location = "Home";
+        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
+          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
           simulationState.isTraveling = true;
           simulationState.travelStartTime = Date.now();
-          simulationState.travelDuration = locationMapping["Home"].travelTime;
+          simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime;
           return "🚗 Traveling Home for a Power Nap";
         }
         return "☕ Taking a Break to Recharge";
@@ -472,7 +474,7 @@ async function loadExternalData() {
         let remaining = simulationState.travelDuration - (Date.now() - simulationState.travelStartTime);
         let eta = Math.ceil(remaining / 60000);
         if (eta < 1) eta = 1;
-        activityDisplay = simulationState.target_location === "Home" ?
+        activityDisplay = simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN" ?
                           "🚗 Commuting home (ETA: " + eta + " min)" :
                           simulationState.current_activity + " (ETA: " + eta + " min)";
       }
