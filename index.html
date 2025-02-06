@@ -171,7 +171,9 @@
         activity_duration: 0,
         persistentHeartRate: getRandomInt(60, 80),
         persistentBodyTemp: 36.5 + (Math.random() - 0.5),
-        lastUpdateTime: Date.now()
+        lastUpdateTime: Date.now(),
+        // For grocery sub-activities.
+        groceryItem: null
       };
     }
     function loadState() {
@@ -220,96 +222,122 @@
       return subActivities[getRandomInt(0, subActivities.length - 1)];
     }
 
+    /* ---------------- Open Applications Helper ---------------- */
+    function getOpenApplications(usageMode) {
+      if (usageMode === "Car") {
+        return ["CarPlay", "Spotify", "Waze"];
+      } else if (usageMode === "PC") {
+        return ["VSCode", "Chrome", "Slack", "Notion", "Discord", "GitHub Desktop", "Steam"];
+      } else if (usageMode === "Phone") {
+        return ["WhatsApp", "YouTube", "Instagram", "TikTok", "Discord", "Snapchat", "Reddit"];
+      }
+      return ["Discord", "YouTube"];
+    }
+
     /* ---------------- Logical Activity Scheduler ---------------- */
-    // This version uses your detailed schedule:
-    // • 6:30 – 7:00: Wake up, get ready, eat breakfast, watch TV (with precise micro‑activities)
-    // • 7:00 – 12:08: Work period (with occasional micro‑activities)
-    // • 12:08 – 12:25: Lunch break (17 minutes)
-    // • 12:25 – 18:30: Afternoon work (with one grocery store trip for 28 minutes around 15:00)
-    // • 18:30 – 20:30: Dinner and a bit of work/relaxing after dinner
-    // • 20:30 – 21:18: Watching TV in bed
-    // • 21:18 – 22:28: Watching TikTok and YouTube until sleep
-    // • 22:28 – 6:30: Sleeping
+    /* Detailed schedule:
+       • 6:30 – 7:00: Detailed morning routine (waking up, bathroom, breakfast, etc.)
+       • 7:00 – 12:08: Work period (with details on what he's working on)
+       • 12:08 – 12:25: Lunch break (17 minutes)
+       • 12:25 – 18:30: Afternoon work (with one grocery store trip for 28 minutes around 15:00)
+       • 18:30 – 20:30: Evening routine (dinner and light work/relaxation)
+       • 20:30 – 21:18: Watching TV in bed
+       • 21:18 – 22:28: Watching TikTok and YouTube
+       • Else: Sleeping
+    */
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
       const minute = now.getMinutes();
       const totalMinutes = hour * 60 + minute; // minutes since midnight
 
-      // If energy is zero, force a break
+      // If energy is zero, force a break.
       if (simulationState.energyLevel <= 0) {
-        return "Break Time – taking a coffee/walk break";
+        return "Break Time – stepping away for a coffee or a walk.";
       }
 
-      // 6:30 – 7:00 (390–420 minutes): Morning routine with micro‑activities
+      // 6:30–7:00 (390–420 minutes): Detailed morning routine.
       if (totalMinutes >= 390 && totalMinutes < 420) {
         const microMorning = [
-          "Waking up with 100% energy",
-          "Rolling out of bed",
-          "Walking to the bathroom",
-          "Peeing",
-          "Taking a quick poop",
-          "Brushing teeth",
-          "Taking a shower",
-          "Getting dressed",
-          "Having breakfast",
-          "Watching TV for 10–30 minutes"
+          "Waking up with 100% energy in his bedroom",
+          "Rolling out of bed and heading to the bathroom",
+          "Using the bathroom (peeing and a quick poop)",
+          "Brushing his teeth thoroughly",
+          "Taking a refreshing shower",
+          "Getting dressed in his usual work clothes",
+          "Heading to the kitchen to prepare and eat breakfast",
+          "Sitting down to watch the morning news on TV"
         ];
-        // Divide the 30‑minute window into equal parts for each activity:
         let partDuration = Math.ceil(30 / microMorning.length);
         let index = Math.floor((totalMinutes - 390) / partDuration);
         if (index >= microMorning.length) index = microMorning.length - 1;
         return microMorning[index];
       }
-      // 7:00 – 12:08 (420–728 minutes): Work period with random micro‑activities
+      // 7:00–12:08 (420–728 minutes): Work period with detailed tasks.
       if (totalMinutes >= 420 && totalMinutes < 728) {
         const workActivities = [
-          "Working on projects",
-          "Reviewing emails",
-          "Taking a short coffee break",
-          "Walking to the bathroom to pee",
-          "Stretching at the desk",
-          "Focused coding session",
-          "Brief pause to check notifications"
+          "Working on Doors – coding the front-end UI and debugging CSS issues",
+          "Reviewing emails and planning the day's tasks in detail",
+          "Having a short coffee break while checking GitHub notifications",
+          "Walking to the bathroom for a quick break (peeing) and stretching",
+          "Deep-diving into a complex coding session to optimize performance",
+          "Reviewing and refining the back-end API logic for Doors",
+          "Taking a moment to review project notes and adjust his workflow"
         ];
         return workActivities[getRandomInt(0, workActivities.length - 1)];
       }
-      // 12:08 – 12:25 (728–745 minutes): Lunch break (17 minutes)
+      // 12:08–12:25 (728–745 minutes): Lunch break.
       if (totalMinutes >= 728 && totalMinutes < 745) {
-        return "Eating lunch (17 minutes)";
+        return "Sitting down to enjoy a 17‑minute lunch at home, savoring his meal.";
       }
-      // 12:25 – 18:30 (745–1110 minutes): Afternoon work
+      // 12:25–18:30 (745–1110 minutes): Afternoon work period.
       if (totalMinutes >= 745 && totalMinutes < 1110) {
-        // Grocery store trip: assume between 15:00 (900) and 15:28 (928) minutes
+        // Grocery store trip between 15:00 (900) and 15:28 (928)
         if (totalMinutes >= 900 && totalMinutes < 928) {
-          return "At the grocery store (28 minutes)";
+          // Calculate elapsed minutes since 15:00
+          let elapsed = totalMinutes - 900;
+          // Pick an item to buy (if not already chosen)
+          if (!simulationState.groceryItem) {
+            let items = ["milk", "bread", "eggs", "cheese", "vegetables", "fruit"];
+            simulationState.groceryItem = items[getRandomInt(0, items.length - 1)];
+          }
+          if (elapsed < 26) {
+            return `At the grocery store (buying ${simulationState.groceryItem})`;
+          } else {
+            // Last 2 minutes before the 28-minute trip ends.
+            if (elapsed < 27) {
+              return "At the grocery store: Waiting in line";
+            } else {
+              return "At the grocery store: Checking out and preparing to head home";
+            }
+          }
         }
         const afternoonActivities = [
-          "Working on projects",
-          "Taking a quick coffee break",
-          "Walking to the bathroom (pee)",
-          "Stretching and refocusing",
-          "Answering emails"
+          "Continuing his work on Doors – fine-tuning the user authentication module",
+          "Answering emails and coordinating with his team via video call",
+          "Reviewing code commits and merging pull requests",
+          "Taking a brief coffee break while reviewing analytics data",
+          "Refactoring code and updating project documentation"
         ];
         return afternoonActivities[getRandomInt(0, afternoonActivities.length - 1)];
       }
-      // 18:30 – 20:30 (1110–1230 minutes): Evening routine – dinner then light work/relaxation
+      // 18:30–20:30 (1110–1230 minutes): Evening routine.
       if (totalMinutes >= 1110 && totalMinutes < 1230) {
         if (totalMinutes < 1125) { // first 15 minutes for dinner
-          return "Eating dinner";
+          return "Sitting down to eat a hearty dinner at home.";
         } else {
-          return "Light work or relaxing after dinner";
+          return "Light work and relaxation – reviewing the day's progress and planning tomorrow.";
         }
       }
-      // 20:30 – 21:18 (1230–1278 minutes): TV in bed
+      // 20:30–21:18 (1230–1278 minutes): Watching TV in bed.
       if (totalMinutes >= 1230 && totalMinutes < 1278) {
-        return "Watching TV in bed";
+        return "Settling into bed and watching his favorite TV show.";
       }
-      // 21:18 – 22:28 (1278–1348 minutes): TikTok and YouTube time
+      // 21:18–22:28 (1278–1348 minutes): TikTok and YouTube time.
       if (totalMinutes >= 1278 && totalMinutes < 1348) {
-        return "Watching TikTok and YouTube";
+        return "Scrolling through TikTok and catching up on YouTube videos.";
       }
-      // Else, it's sleeping time (22:28–6:30)
+      // Else, sleeping time (22:28–6:30)
       return "Sleeping";
     }
 
@@ -347,6 +375,10 @@
         if (now - simulationState.travelStartTime >= simulationState.travelDuration) {
           simulationState.current_location = simulationState.target_location;
           simulationState.isTraveling = false;
+          // Clear grocery item once leaving the grocery store.
+          if(simulationState.current_location !== "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421"){
+            simulationState.groceryItem = null;
+          }
         }
       }
     }
@@ -362,7 +394,9 @@
       minutes = minutes < 10 ? '0' + minutes : minutes;
       return `${hours}:${minutes} ${ampm}`;
     }
+    // Return deep sleeping if the current activity is Sleeping.
     function getSleepStatus() {
+      if (simulationState.current_activity.includes("Sleeping")) return "💤 Deep Sleeping";
       let hour = new Date().getHours();
       if (hour >= 23 || hour < 6) return "💤 Deep Sleeping";
       if (hour >= 13 && hour < 15 && Math.random() < 0.5) return "😴 Light Napping";
@@ -375,7 +409,7 @@
           simulationState.isTraveling = true;
           simulationState.travelStartTime = now;
           simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime;
-          simulationState.current_activity = "🚗 Traveling home for break";
+          simulationState.current_activity = "🚗 Traveling home for a break";
           simulationState.activity_start_time = now;
           return;
         } else {
@@ -395,32 +429,17 @@
         let mapping = locationMapping[simulationState.target_location];
         let elapsed = now - simulationState.travelStartTime;
         let remaining = simulationState.travelDuration - elapsed;
-        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${remaining > 0 ? Math.ceil(remaining/60000) : 0} min)`;
+        simulationState.current_activity = `🚗 Traveling from ${simulationState.current_location} to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${remaining > 0 ? Math.ceil(remaining/60000) : 0} min)`;
         simulationState.activity_duration = simulationState.travelDuration;
         simulationState.activity_start_time = simulationState.travelStartTime;
         return;
       }
       let scheduled = getScheduledActivity();
-      if (scheduled.includes("Commuting")) {
-        if (scheduled.includes("Redibles")) {
-          simulationState.target_location = "1701 Skyline Dr, Chattanooga, TN 37421";
-        } else if (scheduled.includes("Jasper")) {
-          simulationState.target_location = "12033 Haycutter Rd, Birchwood, TN";
-        } else if (scheduled.includes("grocery")) {
-          simulationState.target_location = "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421";
-        } else if (scheduled.includes("home")) {
-          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
-        }
-        if (simulationState.current_location !== simulationState.target_location) {
-          simulationState.isTraveling = true;
-          simulationState.travelStartTime = now;
-          let mapping = locationMapping[simulationState.target_location];
-          simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180,600)*1000;
-          simulationState.current_activity = scheduled;
-          simulationState.activity_duration = simulationState.travelDuration;
-          simulationState.activity_start_time = now;
-          return;
-        }
+      if (scheduled.includes("Traveling") || scheduled.includes("Driving")) {
+        simulationState.current_activity = scheduled;
+        simulationState.activity_duration = simulationState.travelDuration;
+        simulationState.activity_start_time = now;
+        return;
       }
       simulationState.current_activity = scheduled;
       simulationState.activity_duration = getRandomInt(300,900);
@@ -450,6 +469,7 @@
       simulationState.energyLevel = Math.min(Math.max(simulationState.energyLevel, 0), 100);
     }
     function updateHeartRate() {
+      // Update heart rate with dynamic changes.
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
         simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -getRandomInt(1,3) : getRandomInt(0,1);
@@ -460,6 +480,7 @@
       return simulationState.persistentHeartRate;
     }
     function updateBodyTemp() {
+      // Update body temperature more frequently.
       if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
         simulationState.persistentBodyTemp -= Math.abs((Math.random()-0.5)*0.2);
@@ -495,7 +516,7 @@
         return "I'm taking a well-deserved break and rethinking life.";
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
-        return "Time to focus on my code and finish these tasks.";
+        return "Time to focus and push through the coding challenges.";
       }
       const baseThoughts = [
         "Maybe a quick coffee break will help.",
@@ -506,38 +527,56 @@
     }
 
     function updateSlowDisplay() {
-      console.log("Updating display...");
+      // Update system info
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
       let locationDisplay = simulationState.isTraveling 
         ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000)} min)`
         : simulationState.current_location;
       document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${locationDisplay}`;
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
-      let usageMode = simulationState.isTraveling ? "Car" :
-                      (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random()<0.5 ? "PC" : "Phone"));
-      let openApps = (usageMode==="PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
-      document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
+      
+      // Determine usage mode and open apps.
+      let usageMode;
+      if (simulationState.isTraveling) {
+        usageMode = "Car";
+      } else {
+        let sleepStatus = getSleepStatus();
+        if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
+          usageMode = "Sleeping";
+        } else {
+          usageMode = Math.random() < 0.5 ? "PC" : "Phone";
+        }
+      }
+      let openApps = getOpenApplications(usageMode);
+      document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : (usageMode==="Car" ? "🚗 Car Apps:" : "📱 Mobile Apps:")}</span> ${openApps.join(", ")}`;
+      
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
       document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${getRandomInt(1,12)}h ${getRandomInt(0,59)}m`;
       let network = { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) };
       document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${network.download} Mbps ↓ | ${network.upload} Mbps ↑`;
-      let headphoneStatus = Math.random()<0.5 ? "🎧 On" : "❌ Off";
-      let headphoneVolume = headphoneStatus==="🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
+      let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
+      let headphoneVolume = headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
       
-      // If traveling, update the activity text with ETA.
+      // Activity and time at location.
       let activityDisplay = simulationState.current_activity;
-      if(simulationState.isTraveling) {
+      // Append time spent here if not traveling.
+      if (!simulationState.isTraveling) {
+        let durationHere = Math.floor((Date.now() - simulationState.activity_start_time) / 60000);
+        activityDisplay += ` [here for ${durationHere} min]`;
+      }
+      // If traveling, add ETA details.
+      if (simulationState.isTraveling) {
         let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
-        // If commuting home, show "Commuting home (ETA: X min)"
-        if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
+        if (simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
           activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
         } else {
           activityDisplay = simulationState.current_activity + " (ETA: " + eta + " min)";
         }
       }
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${activityDisplay}`;
+      
       let keystrokes = simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break") || simulationState.current_activity.toLowerCase().includes("snack")
                         ? 0 : getRandomInt(50,200);
       document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
@@ -571,9 +610,10 @@
       updateSlowDisplay();
     }
 
+    // Update vitals and display every second.
     updateSlowMetrics();
     updateTimeField();
-    setInterval(updateSlowMetrics, 30000);
+    setInterval(updateSlowMetrics, 1000);
     setInterval(updateTimeField, 1000);
     window.addEventListener("beforeunload", function() {
       saveState(simulationState);
