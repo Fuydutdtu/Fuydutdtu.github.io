@@ -229,7 +229,7 @@
         if (selected.length === 0) selected.push(allCarApps[getRandomInt(0, allCarApps.length - 1)]);
         return selected;
       } else if (usageMode === "PC") {
-        return ["VSCode", "Chrome", "Slack", "Notion", "Discord", "GitHub Desktop", "Steam"];
+        return ["Blender", "Chrome", "Roblox", "Roblox Studio", "Discord", "GitHub Desktop", "Steam", "Riot Client"];
       } else if (usageMode === "Phone") {
         return ["WhatsApp", "YouTube", "Instagram", "TikTok", "Discord", "Snapchat", "Reddit"];
       }
@@ -255,14 +255,14 @@
 
       if (totalMinutes >= 390 && totalMinutes < 420) {
         const microMorning = [
-          "Waking up with 100% energy in his bedroom",
-          "Rolling out of bed and heading to the bathroom",
-          "Using the bathroom (peeing and a quick poop)",
-          "Brushing his teeth thoroughly",
-          "Taking a refreshing shower",
-          "Getting dressed in his usual work clothes",
-          "Heading to the kitchen to prepare and eat breakfast",
-          "Sitting down to watch the morning news on TV"
+          "☀️ Waking up",
+          "🛏️ Rolling out of bed",
+          "🚽 Taking shit",
+          "🪥 Brushing his teeth",
+          "🚿 Shower",
+          "👔 Getting dressed",
+          "🍴 Breakfast",
+          "📺 Watching TV"
         ];
         let partDuration = Math.ceil(30 / microMorning.length);
         let index = Math.floor((totalMinutes - 390) / partDuration);
@@ -273,11 +273,11 @@
         const workActivities = [
           "Working on Doors – coding the front-end UI and debugging CSS issues",
           "Reviewing emails and planning the day's tasks in detail",
-          "Having a short coffee break while checking GitHub notifications",
-          "Walking to the bathroom for a quick break (peeing) and stretching",
-          "Deep-diving into a complex coding session to optimize performance",
-          "Reviewing and refining the back-end API logic for Doors",
-          "Taking a moment to review project notes and adjust his workflow"
+          "Having a short coffee break while X",
+          "Walking to the bathroom for a quick shit",
+          "Working on Doors modules",
+          "Brainstorming",
+          "Discussing with team"
         ];
         return workActivities[getRandomInt(0, workActivities.length - 1)];
       }
@@ -288,7 +288,7 @@
         if (totalMinutes >= 900 && totalMinutes < 928) {
           let elapsed = totalMinutes - 900;
           if (!simulationState.groceryItem) {
-            let items = ["milk", "bread", "eggs", "cheese", "vegetables", "fruit"];
+            let items = ["milk", "bread", "eggs", "cheese", "vegetables", "fruit", "figure meat"];
             simulationState.groceryItem = items[getRandomInt(0, items.length - 1)];
           }
           if (elapsed < 26) {
@@ -297,31 +297,31 @@
             if (elapsed < 27) {
               return "At the grocery store: Waiting in line";
             } else {
-              return "At the grocery store: Checking out and preparing to head home";
+              return "At the grocery store: Checking out and heading home";
             }
           }
         }
         const afternoonActivities = [
-          "Continuing his work on Doors – fine-tuning the user authentication module",
-          "Answering emails and coordinating with his team via video call",
-          "Reviewing code commits and merging pull requests",
-          "Taking a brief coffee break while reviewing analytics data",
-          "Refactoring code and updating project documentation"
+          "Working on floor 3",
+          "Writing excuse on delay",
+          "Smashing head against wall",
+          "Making Sneak Peek",
+          "Coding Wade"
         ];
         return afternoonActivities[getRandomInt(0, afternoonActivities.length - 1)];
       }
       if (totalMinutes >= 1110 && totalMinutes < 1230) {
         if (totalMinutes < 1125) {
-          return "Sitting down to eat a hearty dinner at home.";
+          return "Eating Dinner";
         } else {
-          return "Light work and relaxation – reviewing the day's progress and planning tomorrow.";
+          return "Finishing working, checking schedule";
         }
       }
       if (totalMinutes >= 1230 && totalMinutes < 1278) {
-        return "Settling into bed and watching his favorite TV show.";
+        return "In bed watching TV";
       }
       if (totalMinutes >= 1278 && totalMinutes < 1348) {
-        return "Scrolling through TikTok and catching up on YouTube videos.";
+        return "Scrolling through TikTok and Shorts";
       }
       return "Sleeping";
     }
@@ -493,30 +493,31 @@
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
         const workThoughts = [
-          "Deep in code, solving complex puzzles.",
-          "Focusing hard to squash bugs.",
-          "Brainstorming innovative solutions.",
-          "In the zone and making breakthroughs."
+          "What if I delete everything and restart from scratch",
+          "Maybe I should delete the game",
+          "Maybe I should remove figure",
+          "I should procrastinate as much as possible so update doesn't come out"
         ];
         return workThoughts[getRandomInt(0, workThoughts.length - 1)];
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Sleeping")) {
-        const dreamThoughts = [
-          "Dreaming of adventures in surreal worlds.",
-          "Floating through calming, vivid dreams.",
-          "Exploring fantastical realms in sleep.",
-          "Drifting into a peaceful dreamscape."
-        ];
-        return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
-      }
-      const baseThoughts = [
-        "Maybe a quick coffee break will help.",
-        "Time to check some game stats.",
-        "I need to relax for a moment.",
-        "Just taking it easy for now."
-      ];
-      return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
-    }
+  const dreamThoughts = [
+    "maybe i should put a cat on everything ppl cant see",
+    "Zzz… dreaming up some secret image of kreek to hide somwhere",
+    "Napping—my dreams are full of figure meat,
+    "Off in dreamland, plotting some crazy doors shit"
+  ];
+  return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
+}
+
+const baseThoughts = [
+  "I want coffee—this game won't build itself!",
+  "IDK what to think anymore",
+  "Quick breather before more doors madness.",
+  "Snacking and scheming on the next doors idea.",
+  "Maybe I'll sleep on it... Nah, more doors!"
+];
+return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
 
     /* ---------------- Display Update Functions ---------------- */
     // Update the slow-changing metrics (every 5 seconds in this example)
@@ -590,7 +591,7 @@
       
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
       
-      let phoneStatus = simulationState.phoneCharging ? "(Charging)" : "(not charging)";
+      let phoneStatus = simulationState.phoneCharging ? "(Charging)" : "(Not Charging)";
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${Math.round(simulationState.phone_battery)}% ${phoneStatus}`;
       
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
@@ -605,7 +606,7 @@
     }
     
     function updateTimeField() {
-      document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
+      document.getElementById("timeField").innerHTML = `<span class="label">🕰️ Time:</span> ${getESTTime()}`;
     }
 
     // This function updates the slower metrics and simulates state changes.
