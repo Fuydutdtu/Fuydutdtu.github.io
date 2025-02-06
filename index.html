@@ -138,13 +138,12 @@
     function getRandomFloat(min, max) {
       return (Math.random() * (max - min) + min).toFixed(1);
     }
-    // Returns the number of minutes since midnight.
     function getMinutesSinceMidnight() {
       const now = new Date();
       return now.getHours() * 60 + now.getMinutes();
     }
 
-    /* ---------------- Location & Activity Data ---------------- */
+    /* ---------------- Location & Schedule Data ---------------- */
     const locationMapping = {
       "Home": { description: "Home", travelTime: 0 },
       "Redibles": { description: "At Redibles", travelTime: 5 * 60000 },
@@ -152,8 +151,7 @@
     };
     const addresses = Object.keys(locationMapping);
 
-    /* ---------------- Detailed Daily Schedule ---------------- */
-    // Times are in minutes since midnight. Developer wakes at 6:30 (390) and sleeps at 22:28 (1348).
+    // Detailed schedule (times in minutes since midnight: wake at 6:30, sleep at 22:28)
     const dailySchedule = [
       { start: 390, end: 405, activity: "🚽 Morning Routine: Wake up, bathroom, brush teeth" },
       { start: 405, end: 435, activity: "☕ Breakfast & Daily Planning" },
@@ -170,128 +168,114 @@
       { start: 1230, end: 1348, activity: "🌙 Wind Down: Wrap up work, plan next day, personal time" }
     ];
 
-    /* ---------------- Extensive Thoughts & Activities ---------------- */
+    /* ---------------- Extensive Thoughts & Sub-Activities ---------------- */
     const thoughtsList = [
+      // 100+ detailed thoughts
       "Time to optimize the door collision detection algorithm.",
-      "I need to re-read the documentation for door animations.",
-      "Maybe adding a subtle sound effect to door opening will enhance immersion.",
-      "Revising the debugging log for mysterious door glitches.",
-      "Coffee break: reviewing the latest code commits on the door module.",
-      "I wonder if a hidden easter egg behind a door could tie into the lore.",
-      "Check the API for improved door rendering performance.",
-      "Consider integrating user feedback from the latest test session.",
-      "Need to update the door texture for smoother transitions.",
-      "Plan a meeting with Redibles to discuss new door mechanics.",
-      "Refactoring code to simplify door unlocking logic.",
-      "Test new door sensor inputs for better responsiveness.",
-      "Sketching ideas for a secret door animation.",
-      "Reviewing user bug reports on door misfires.",
-      "Optimizing the door animation loop for smoother play.",
-      "Thinking about a hidden mini-game behind a locked door.",
-      "Brainstorming subtle cues for door interaction feedback.",
-      "Revisiting door physics to ensure accurate collision detection.",
-      "Documenting improvements in the door debugging process.",
-      "Evaluating performance metrics for door load times.",
-      "Designing a new door interface that feels intuitive.",
-      "Checking out competitor games for innovative door features.",
-      "Drafting notes for a door-themed update patch.",
-      "Comparing current door mechanics with last year's design.",
-      "Researching best practices in door animation transitions.",
-      "Curating a list of door ideas for the next brainstorming session.",
-      "Integrating dynamic lighting effects in door animations.",
-      "Reviewing internal feedback on the door sound effects.",
-      "Mapping out potential bugs in the door locking mechanism.",
-      "Updating the version control log for door feature updates.",
-      "Experimenting with new color schemes for door models.",
-      "Optimizing the script for door state transitions.",
-      "Checking memory usage of door animation assets.",
-      "Thinking of a narrative hook for a door easter egg.",
-      "Collaborating with team members on door debugging strategies.",
-      "Adding comments to improve code readability in door functions.",
-      "Researching user engagement trends with door interactions.",
-      "Analyzing logs to identify recurring door errors.",
-      "Sketching a storyboard for a new door mechanic tutorial.",
-      "Tuning the physics parameters for door swing speed.",
-      "Exploring potential partnerships for door-themed collaborations.",
-      "Reviewing code reviews focused on door module performance.",
-      "Testing door response under varying network conditions.",
+      "Reviewing the door unlocking logic—need to tighten security.",
+      "Maybe add a subtle ambient sound for door opening.",
+      "Revisiting user feedback on door animations.",
+      "Refactoring the door state machine for better performance.",
+      "Experimenting with dynamic lighting on door models.",
+      "Checking the door texture mapping for smoother transitions.",
+      "Documenting recent door bug fixes.",
+      "Brainstorming ideas for a secret door easter egg.",
+      "Running unit tests on the door module.",
+      "Integrating new animations for a smoother door swing.",
+      "Analyzing performance logs for door interactions.",
+      "Collaborating with the design team on door aesthetics.",
+      "Updating the code comments for clarity in door functions.",
+      "Reviewing community suggestions for door features.",
+      "Optimizing door rendering for lower-end devices.",
       "Drafting a design document for the next door update.",
-      "Reflecting on past door updates and what could be improved.",
-      "Pondering if a door mini-game could boost user engagement.",
-      "Evaluating the efficiency of the door state machine.",
-      "Double-checking door animation triggers before deployment.",
-      "Preparing a demo for the new door unlocking system.",
-      "Reviewing performance benchmarks for door rendering.",
-      "Curious about incorporating user customization for doors.",
-      "Noting ideas for improved door security in-game.",
-      "Assessing the scalability of door interactions for large player counts.",
-      "Experimenting with sound cues to accompany door opening.",
-      "Investigating alternative algorithms for door collision detection.",
-      "Reading up on new trends in interactive game design.",
-      "Updating the door codebase to be more modular.",
-      "Sketching the layout for the upcoming door interface redesign.",
-      "Cross-referencing door features with community suggestions.",
-      "Analyzing downtime caused by door glitches in the last update.",
-      "Reviewing logs to measure door response latency.",
-      "Planning a detailed test plan for the door unlocking feature.",
-      "Optimizing server-side logic for door state synchronization.",
-      "Brainstorming ideas for secret door unlock conditions.",
-      "Evaluating consistency of door behavior across platforms.",
-      "Refining the door unlocking animation for natural movement.",
-      "Mapping out the user journey for door interactions.",
-      "Checking compatibility of door assets with new Roblox updates.",
-      "Assessing energy consumption of door animations during gameplay.",
-      "Testing door behavior under extreme in-game conditions.",
-      "Scheduling a review session for door code with the team.",
-      "Preparing a report on door module improvements.",
-      "Analyzing error rates related to door interactions.",
-      "Drafting a proposal for an advanced door customization system.",
-      "Testing door animations on different device resolutions.",
-      "Curating a set of door sounds for various interaction states.",
-      "Examining user metrics for door engagement trends.",
-      "Reflecting on the evolution of door mechanics over time.",
-      "Noting ideas for a more immersive door unlocking experience.",
-      "Reviewing best practices from top Roblox developers on door systems.",
-      "Cross-checking door collision detection with physics simulations.",
-      "Comparing door mechanics between different Roblox experiences.",
-      "Exploring the possibility of integrating AI for door interactions.",
-      "Brainstorming ways to minimize door lag during peak usage.",
-      "Updating the door module to support new animation libraries.",
-      "Examining potential security loopholes in door unlocking algorithms.",
-      "Reviewing code for potential improvements in door state management.",
-      "Analyzing player behavior around door interactions during tests.",
-      "Considering a modular design for future door updates.",
-      "Reviewing performance data on door interaction times.",
-      "Sketching diagrams to illustrate door mechanism improvements.",
-      "Researching the latest trends in interactive door design.",
-      "Consulting with UX designers on door interface improvements.",
-      "Planning an update rollout schedule for door-related features.",
-      "Drafting an email to gather feedback on the new door update.",
-      "Reflecting on how door glitches have affected gameplay.",
-      "Creating a checklist for door feature quality assurance.",
-      "Testing door animations in various lighting scenarios.",
-      "Analyzing the impact of door sound effects on user experience.",
-      "Sketching potential door layouts for the next update.",
-      "Reviewing metrics on door usage during beta tests.",
-      "Documenting user feedback on door interface clarity.",
-      "Preparing for a presentation on door module innovations.",
-      "Cross-checking door feature requests with the design team.",
-      "Reviewing and updating the door module’s test suite.",
-      "Reflecting on personal coding techniques for door mechanics.",
-      "Researching academic papers on collision detection algorithms.",
-      "Drafting a plan to integrate machine learning for door behavior.",
-      "Reviewing internal discussions on door module performance.",
-      "Curating door design inspirations from other games.",
-      "Finalizing the prototype for an interactive door puzzle.",
-      "Assessing the cost of implementing a new door animation system.",
-      "Brainstorming ways to reduce door-related bugs in production.",
-      "Evaluating the user interface for door state notifications.",
-      "Testing door interactions in multiplayer scenarios.",
-      "Drafting improvements for door interaction error handling.",
-      "Reviewing statistical data on door usage over the past quarter.",
-      "Noting ideas for seasonal door themes.",
-      "Preparing documentation for a door feature handover to QA.",
-      "Reflecting on the balance between door complexity and usability."
+      "Checking door collision boundaries against physics simulation.",
+      "Sketching a storyboard for a door transition sequence.",
+      "Reviewing the latest commit on door unlocking code.",
+      "Evaluating the impact of door glitches on user experience.",
+      "Planning a team meeting to discuss door UI improvements.",
+      "Testing door behavior under high network latency.",
+      "Comparing door mechanics with industry standards.",
+      "Brainstorming modular door design for scalability.",
+      "Analyzing user metrics on door interaction frequency.",
+      "Optimizing the door asset pipeline for faster load times.",
+      "Reviewing API changes affecting door animations.",
+      "Refining sound synchronization for door events.",
+      "Updating the door module with new error handling routines.",
+      "Researching advanced collision detection for doors.",
+      "Examining door locking mechanisms for potential improvements.",
+      "Tuning door swing speed for a more natural feel.",
+      "Documenting lessons learned from recent door patch.",
+      "Reviewing the door module’s integration with the physics engine.",
+      "Sketching a new layout for the door interface.",
+      "Evaluating the energy cost of door animations.",
+      "Brainstorming seasonal themes for door designs.",
+      "Checking compatibility of door assets with new platform updates.",
+      "Assessing the scalability of door mechanics in multiplayer mode.",
+      "Reviewing code for potential door optimization.",
+      "Drafting proposals for an interactive door mini-game.",
+      "Testing door unlocking under various user inputs.",
+      "Analyzing door module performance benchmarks.",
+      "Documenting best practices for door development.",
+      "Preparing a demo for the upcoming door feature update.",
+      "Reviewing door animation transitions for smoothness.",
+      "Refactoring door code to reduce computational overhead.",
+      "Comparing door state machines across different projects.",
+      "Optimizing door asset memory usage.",
+      "Checking for security loopholes in door unlocking code.",
+      "Evaluating user interface responsiveness for door controls.",
+      "Brainstorming ideas for a hidden door challenge.",
+      "Documenting a list of door-related bug reports.",
+      "Updating the changelog for recent door improvements.",
+      "Testing door interactions on various screen resolutions.",
+      "Reviewing team feedback on door feature priorities.",
+      "Drafting an email to gather additional door feature suggestions.",
+      "Analyzing recurring errors in the door animation cycle.",
+      "Researching new libraries for enhanced door rendering.",
+      "Cross-referencing door features with user analytics.",
+      "Reviewing code structure for door feature modularity.",
+      "Planning a collaborative session to innovate door mechanics.",
+      "Evaluating the impact of door glitches on overall gameplay.",
+      "Optimizing door state transitions to reduce lag.",
+      "Documenting design decisions for door security enhancements.",
+      "Reviewing network logs for door synchronization issues.",
+      "Sketching alternative door layouts for increased engagement.",
+      "Testing door performance during peak player loads.",
+      "Analyzing the correlation between door interaction and user retention.",
+      "Drafting a proposal for advanced door customization options.",
+      "Reviewing door feature implementation with the QA team.",
+      "Brainstorming a narrative hook around a mysterious door.",
+      "Testing new door input methods for better usability.",
+      "Reviewing code for door animation smoothing techniques.",
+      "Documenting performance improvements from the latest door patch.",
+      "Evaluating door error rates in the production environment.",
+      "Cross-checking door functionality across different devices.",
+      "Drafting a presentation on the future of door mechanics.",
+      "Optimizing door collision detection using new algorithms.",
+      "Reviewing internal documentation on door feature development.",
+      "Brainstorming a door mini-game that ties into the lore.",
+      "Testing door behavior with simulated high-latency networks.",
+      "Analyzing user behavior data related to door interactions.",
+      "Preparing a report on door module improvements for stakeholders.",
+      "Drafting new test cases for door feature QA.",
+      "Evaluating potential enhancements to door sound effects.",
+      "Reflecting on past door updates and lessons learned.",
+      "Researching industry trends in interactive door design.",
+      "Brainstorming potential partnerships for door-themed updates.",
+      "Documenting a roadmap for next-quarter door improvements.",
+      "Reviewing the door module for potential memory leaks.",
+      "Sketching ideas for a door unlocking animation that feels natural.",
+      "Testing door responsiveness under rapid user inputs.",
+      "Analyzing system logs for door animation inconsistencies.",
+      "Drafting detailed user feedback reports on door features.",
+      "Reflecting on personal coding strategies for door development.",
+      "Evaluating the feasibility of AI-enhanced door interactions.",
+      "Preparing a demo showcasing innovative door animations.",
+      "Assessing the overall performance of the door module during tests.",
+      "Reviewing community feedback for door theme updates.",
+      "Testing alternative methods for door state synchronization.",
+      "Drafting a new design document for the door user interface.",
+      "Reflecting on the balance between door complexity and usability.",
+      "Planning a review session on door error handling improvements."
     ];
     
     const activitiesList = [
@@ -332,9 +316,12 @@
       "Collaborate on door security enhancements",
       "Check compatibility of door assets with updates",
       "Analyze energy consumption of door animations",
-      "Review the user interface for door status indicators",
-      "Test door interactions in multiplayer mode",
-      "Draft a proposal for door customization",
+      "Review the door module’s integration with the physics engine",
+      "Sketch a new layout for the door interface",
+      "Evaluate energy cost of door animations",
+      "Brainstorm seasonal themes for doors",
+      "Check compatibility of door assets with platform updates",
+      "Assess scalability of door interactions",
       "Review code quality in door functions",
       "Refactor the door unlocking algorithm",
       "Create a checklist for door QA testing",
@@ -344,7 +331,7 @@
       "Evaluate door usage metrics",
       "Draft an email for door feature feedback",
       "Research advanced collision algorithms",
-      "Brainstorm seasonal themes for doors",
+      "Brainstorm seasonal door themes",
       "Review door physics simulation data",
       "Test new door hardware integration",
       "Optimize door load times",
@@ -359,7 +346,7 @@
       "Test door interaction under high latency",
       "Draft a roadmap for door updates",
       "Review logs to identify door bugs",
-      "Analyze the impact of door sound effects",
+      "Analyze impact of door sound effects",
       "Plan a presentation on door innovations",
       "Conduct a team review on door feedback",
       "Refine door locking mechanism algorithms",
@@ -370,7 +357,7 @@
       "Plan a meeting to discuss door improvements",
       "Brainstorm ideas for interactive door puzzles",
       "Review and update door test suites",
-      "Analyze door usage data over the last month",
+      "Analyze door usage data over the past month",
       "Document best practices for door design",
       "Prototype a hidden door feature",
       "Review internal door proposals",
@@ -378,72 +365,62 @@
       "Plan a creative break to gather door ideas",
       "Compile a list of door improvement suggestions"
     ];
-
+    
     function getRandomThought() {
       return thoughtsList[getRandomInt(0, thoughtsList.length - 1)];
     }
     function getRandomActivity() {
       return activitiesList[getRandomInt(0, activitiesList.length - 1)];
     }
-    
-    // Modify getThoughtProcess() to randomly choose from thoughtsList.
     function getThoughtProcess() {
       return getRandomThought();
     }
-    // (Optional) Function to return a random additional subactivity.
+    // Optionally, include additional sub-activities:
     function getAdditionalActivity() {
       return getRandomActivity();
     }
     
-    /* ---------------- Persistent State ---------------- */
-    function getDefaultState() {
-      return {
-        current_ip: "192.241.0.1",
-        ip_set_time: Date.now(),
-        current_location: "Home",
-        target_location: "Home",
-        isTraveling: false,
-        travelStartTime: null,
-        travelDuration: 0,
-        device_info: "Windows 11 | Ryzen 7 5800X | RTX 3070",
-        energyLevel: 80,
-        phone_battery: 75,
-        phoneCharging: false,
-        current_activity: "Initializing",
-        activity_start_time: Date.now(),
-        activity_duration: 0,
-        persistentHeartRate: 70,
-        persistentBodyTemp: 36.5,
-        lastUpdateTime: Date.now(),
-        lastSeen: getRandomInt(1,15),
-        keystrokes: 160,
-        cpuUsage: getRandomInt(10,50),
-        uptimeHours: getRandomInt(1,12),
-        uptimeMinutes: getRandomInt(0,59),
-        networkDownload: getRandomFloat(5,15),
-        networkUpload: getRandomFloat(1,5),
-        headphoneStatus: Math.random() < 0.5 ? "🎧 On" : "❌ Off",
-        headphoneVolume: "N/A"
-      };
-    }
-    function saveState(state) {
-      localStorage.setItem("simulationState", JSON.stringify(state));
-    }
-    function loadState() {
+    /* ---------------- Server-Based State Persistence ---------------- */
+    // Replace localStorage-based persistence with server calls.
+    // For this example, assume there are endpoints at /loadState and /saveState
+    async function loadStateFromServer() {
       try {
-        let state = localStorage.getItem("simulationState");
-        return state ? JSON.parse(state) : null;
+        let response = await fetch('/loadState'); // Your server should handle this request.
+        if (response.ok) {
+          return await response.json();
+        }
       } catch (e) {
-        return null;
+        console.error("Error loading state from server:", e);
+      }
+      return getDefaultState();
+    }
+    async function saveStateToServer(state) {
+      try {
+        await fetch('/saveState', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state)
+        });
+      } catch (e) {
+        console.error("Error saving state to server:", e);
       }
     }
     
-    let simulationState = loadState();
-    if (!simulationState) {
-      simulationState = getDefaultState();
-      simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
-      saveState(simulationState);
+    async function initState() {
+      simulationState = await loadStateFromServer();
+      if (!simulationState) simulationState = getDefaultState();
     }
+    
+    /* ---------------- Persistent State Initialization ---------------- */
+    let simulationState = {};
+    initState().then(() => {
+      simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
+      // Start the simulation loop after state is loaded
+      updateSlowMetrics();
+      updateTimeField();
+      setInterval(updateSlowMetrics, 30000);
+      setInterval(updateTimeField, 1000);
+    });
     
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
@@ -645,7 +622,7 @@
     function updateTimeField() {
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
-    function updateSlowMetrics() {
+    async function updateSlowMetrics() {
       tryToBecomeLeader();
       const now = Date.now();
       const dtMinutes = computeDeltaTime();
@@ -668,15 +645,11 @@
       }
       updateLeaderHeartbeat();
       updateSlowDisplay();
-      saveState(simulationState);
+      await saveStateToServer(simulationState);
     }
-    updateSlowMetrics();
     updateTimeField();
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
-    window.addEventListener("beforeunload", function() {
-      saveState(simulationState);
-    });
   </script>
 </body>
 </html>
