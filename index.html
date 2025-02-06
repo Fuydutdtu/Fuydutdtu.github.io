@@ -146,21 +146,21 @@
 
     /* ---------------- Load External JSON Data ---------------- */
     async function loadJSON(url) {
-      try {
-        let response = await fetch(url);
-        if (response.ok) return await response.json();
-      } catch(e) {
-        console.error("Error loading JSON from", url, e);
-      }
-      return null;
-    }
-    // Load thoughts and activities from files in the /data folder.
-    let thoughtsList = [];
-    let activitiesList = [];
-    async function loadExternalData() {
-      thoughtsList = await loadJSON('/data/thoughts.json') || [];
-      activitiesList = await loadJSON('/data/activities.json') || [];
-    }
+  try {
+    let response = await fetch(url);
+    if (response.ok) return await response.json();
+  } catch(e) {
+    console.error("Error loading JSON from", url, e);
+  }
+  return null;
+}
+
+// For GitHub Pages, use relative paths:
+async function loadExternalData() {
+  thoughtsList = await loadJSON('./data/thoughts.json') || [];
+  activitiesList = await loadJSON('./data/activities.json') || [];
+}
+
     const defaultThoughts = [ 
       "Time to optimize the door collision detection algorithm.",
       "Reviewing the door unlocking logic—tighten security.",
