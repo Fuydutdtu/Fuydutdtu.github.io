@@ -148,15 +148,13 @@
     async function loadJSON(url) {
       try {
         let response = await fetch(url);
-        if (response.ok) {
-          return await response.json();
-        }
+        if (response.ok) return await response.json();
       } catch(e) {
         console.error("Error loading JSON from", url, e);
       }
       return null;
     }
-    // Load thoughts and activities from separate files.
+    // Load thoughts and activities from files in the /data folder.
     let thoughtsList = [];
     let activitiesList = [];
     async function loadExternalData() {
@@ -192,6 +190,12 @@
     }
     function getAdditionalActivity() {
       return getRandomActivity();
+    }
+
+    /* ---------------- Fallback for getOpenApplications ---------------- */
+    function getOpenApplications() {
+      // Return a simple list of applications.
+      return ["Roblox Studio", "VSCode", "Discord"];
     }
 
     /* ---------------- Schedule Data ---------------- */
