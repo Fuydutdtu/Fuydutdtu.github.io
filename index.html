@@ -126,7 +126,7 @@
     <img src="images/pfp.jpg" alt="Profile Picture">
     <div>
       <strong>Made By RobloxEmployee</strong><br>
-      Dont Worry, We See You Too 👀
+      Detailed tracking for your door development day.
     </div>
   </footer>
 
@@ -138,28 +138,275 @@
     function getRandomFloat(min, max) {
       return (Math.random() * (max - min) + min).toFixed(1);
     }
+    // Returns the number of minutes since midnight.
+    function getMinutesSinceMidnight() {
+      const now = new Date();
+      return now.getHours() * 60 + now.getMinutes();
+    }
 
     /* ---------------- Location & Activity Data ---------------- */
     const locationMapping = {
-      "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
-      "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
-      "1701 Skyline Dr, Chattanooga, TN 37421": { description: "Redibles House", travelTime: 540000 },
-      "12033 Haycutter Rd, Birchwood, TN": { description: "Jasper's House", travelTime: 2760000 }
+      "Home": { description: "Home", travelTime: 0 },
+      "Redibles": { description: "At Redibles", travelTime: 5 * 60000 },
+      "Jasper's House": { description: "At Jasper's House", travelTime: 8 * 60000 }
     };
     const addresses = Object.keys(locationMapping);
 
+    /* ---------------- Detailed Daily Schedule ---------------- */
+    // Times are in minutes since midnight. Developer wakes at 6:30 (390) and sleeps at 22:28 (1348).
+    const dailySchedule = [
+      { start: 390, end: 405, activity: "🚽 Morning Routine: Wake up, bathroom, brush teeth" },
+      { start: 405, end: 435, activity: "☕ Breakfast & Daily Planning" },
+      { start: 435, end: 480, activity: "📧 Check emails and review schedule" },
+      { start: 480, end: 600, activity: "💻 Coding & Debugging Door Mechanics" },
+      { start: 600, end: 615, activity: "🔄 Short Break: Stretch, quick snack" },
+      { start: 615, end: 720, activity: "🎨 Designing New Door Features & Animations" },
+      { start: 720, end: 750, activity: "🍴 Lunch Break" },
+      { start: 750, end: 900, activity: "🚪 Intensive Development: Implementing & testing door logic" },
+      { start: 900, end: 915, activity: "☕ Afternoon Break: Bathroom & coffee" },
+      { start: 915, end: 1020, activity: "🤝 Collaboration: Video calls with Redibles/Jasper, brainstorming door lore" },
+      { start: 1020, end: 1080, activity: "🚀 Prototyping & Testing: Refining door animations and code" },
+      { start: 1080, end: 1230, activity: "🎮 Creative Break: Play Ragdoll Universe & review new ideas" },
+      { start: 1230, end: 1348, activity: "🌙 Wind Down: Wrap up work, plan next day, personal time" }
+    ];
+
+    /* ---------------- Extensive Thoughts & Activities ---------------- */
+    const thoughtsList = [
+      "Time to optimize the door collision detection algorithm.",
+      "I need to re-read the documentation for door animations.",
+      "Maybe adding a subtle sound effect to door opening will enhance immersion.",
+      "Revising the debugging log for mysterious door glitches.",
+      "Coffee break: reviewing the latest code commits on the door module.",
+      "I wonder if a hidden easter egg behind a door could tie into the lore.",
+      "Check the API for improved door rendering performance.",
+      "Consider integrating user feedback from the latest test session.",
+      "Need to update the door texture for smoother transitions.",
+      "Plan a meeting with Redibles to discuss new door mechanics.",
+      "Refactoring code to simplify door unlocking logic.",
+      "Test new door sensor inputs for better responsiveness.",
+      "Sketching ideas for a secret door animation.",
+      "Reviewing user bug reports on door misfires.",
+      "Optimizing the door animation loop for smoother play.",
+      "Thinking about a hidden mini-game behind a locked door.",
+      "Brainstorming subtle cues for door interaction feedback.",
+      "Revisiting door physics to ensure accurate collision detection.",
+      "Documenting improvements in the door debugging process.",
+      "Evaluating performance metrics for door load times.",
+      "Designing a new door interface that feels intuitive.",
+      "Checking out competitor games for innovative door features.",
+      "Drafting notes for a door-themed update patch.",
+      "Comparing current door mechanics with last year's design.",
+      "Researching best practices in door animation transitions.",
+      "Curating a list of door ideas for the next brainstorming session.",
+      "Integrating dynamic lighting effects in door animations.",
+      "Reviewing internal feedback on the door sound effects.",
+      "Mapping out potential bugs in the door locking mechanism.",
+      "Updating the version control log for door feature updates.",
+      "Experimenting with new color schemes for door models.",
+      "Optimizing the script for door state transitions.",
+      "Checking memory usage of door animation assets.",
+      "Thinking of a narrative hook for a door easter egg.",
+      "Collaborating with team members on door debugging strategies.",
+      "Adding comments to improve code readability in door functions.",
+      "Researching user engagement trends with door interactions.",
+      "Analyzing logs to identify recurring door errors.",
+      "Sketching a storyboard for a new door mechanic tutorial.",
+      "Tuning the physics parameters for door swing speed.",
+      "Exploring potential partnerships for door-themed collaborations.",
+      "Reviewing code reviews focused on door module performance.",
+      "Testing door response under varying network conditions.",
+      "Drafting a design document for the next door update.",
+      "Reflecting on past door updates and what could be improved.",
+      "Pondering if a door mini-game could boost user engagement.",
+      "Evaluating the efficiency of the door state machine.",
+      "Double-checking door animation triggers before deployment.",
+      "Preparing a demo for the new door unlocking system.",
+      "Reviewing performance benchmarks for door rendering.",
+      "Curious about incorporating user customization for doors.",
+      "Noting ideas for improved door security in-game.",
+      "Assessing the scalability of door interactions for large player counts.",
+      "Experimenting with sound cues to accompany door opening.",
+      "Investigating alternative algorithms for door collision detection.",
+      "Reading up on new trends in interactive game design.",
+      "Updating the door codebase to be more modular.",
+      "Sketching the layout for the upcoming door interface redesign.",
+      "Cross-referencing door features with community suggestions.",
+      "Analyzing downtime caused by door glitches in the last update.",
+      "Reviewing logs to measure door response latency.",
+      "Planning a detailed test plan for the door unlocking feature.",
+      "Optimizing server-side logic for door state synchronization.",
+      "Brainstorming ideas for secret door unlock conditions.",
+      "Evaluating consistency of door behavior across platforms.",
+      "Refining the door unlocking animation for natural movement.",
+      "Mapping out the user journey for door interactions.",
+      "Checking compatibility of door assets with new Roblox updates.",
+      "Assessing energy consumption of door animations during gameplay.",
+      "Testing door behavior under extreme in-game conditions.",
+      "Scheduling a review session for door code with the team.",
+      "Preparing a report on door module improvements.",
+      "Analyzing error rates related to door interactions.",
+      "Drafting a proposal for an advanced door customization system.",
+      "Testing door animations on different device resolutions.",
+      "Curating a set of door sounds for various interaction states.",
+      "Examining user metrics for door engagement trends.",
+      "Reflecting on the evolution of door mechanics over time.",
+      "Noting ideas for a more immersive door unlocking experience.",
+      "Reviewing best practices from top Roblox developers on door systems.",
+      "Cross-checking door collision detection with physics simulations.",
+      "Comparing door mechanics between different Roblox experiences.",
+      "Exploring the possibility of integrating AI for door interactions.",
+      "Brainstorming ways to minimize door lag during peak usage.",
+      "Updating the door module to support new animation libraries.",
+      "Examining potential security loopholes in door unlocking algorithms.",
+      "Reviewing code for potential improvements in door state management.",
+      "Analyzing player behavior around door interactions during tests.",
+      "Considering a modular design for future door updates.",
+      "Reviewing performance data on door interaction times.",
+      "Sketching diagrams to illustrate door mechanism improvements.",
+      "Researching the latest trends in interactive door design.",
+      "Consulting with UX designers on door interface improvements.",
+      "Planning an update rollout schedule for door-related features.",
+      "Drafting an email to gather feedback on the new door update.",
+      "Reflecting on how door glitches have affected gameplay.",
+      "Creating a checklist for door feature quality assurance.",
+      "Testing door animations in various lighting scenarios.",
+      "Analyzing the impact of door sound effects on user experience.",
+      "Sketching potential door layouts for the next update.",
+      "Reviewing metrics on door usage during beta tests.",
+      "Documenting user feedback on door interface clarity.",
+      "Preparing for a presentation on door module innovations.",
+      "Cross-checking door feature requests with the design team.",
+      "Reviewing and updating the door module’s test suite.",
+      "Reflecting on personal coding techniques for door mechanics.",
+      "Researching academic papers on collision detection algorithms.",
+      "Drafting a plan to integrate machine learning for door behavior.",
+      "Reviewing internal discussions on door module performance.",
+      "Curating door design inspirations from other games.",
+      "Finalizing the prototype for an interactive door puzzle.",
+      "Assessing the cost of implementing a new door animation system.",
+      "Brainstorming ways to reduce door-related bugs in production.",
+      "Evaluating the user interface for door state notifications.",
+      "Testing door interactions in multiplayer scenarios.",
+      "Drafting improvements for door interaction error handling.",
+      "Reviewing statistical data on door usage over the past quarter.",
+      "Noting ideas for seasonal door themes.",
+      "Preparing documentation for a door feature handover to QA.",
+      "Reflecting on the balance between door complexity and usability."
+    ];
+    
+    const activitiesList = [
+      "Review door code documentation",
+      "Optimize door collision detection",
+      "Refactor the door state machine",
+      "Test door animation transitions",
+      "Debug door unlocking issues",
+      "Update door textures",
+      "Integrate new door sound effects",
+      "Document door bug reports",
+      "Collaborate on door design with the team",
+      "Review pull requests for door features",
+      "Sketch new door animation ideas",
+      "Plan a meeting for door brainstorming",
+      "Research door physics parameters",
+      "Write unit tests for door modules",
+      "Conduct user testing on door interactions",
+      "Review door-related feedback on forums",
+      "Optimize door rendering performance",
+      "Implement a new door locking mechanism",
+      "Test door behavior on multiple devices",
+      "Update the door module in version control",
+      "Analyze performance logs for door functions",
+      "Prepare a demo for new door features",
+      "Refine door collision parameters",
+      "Brainstorm hidden door easter eggs",
+      "Review community suggestions for door improvements",
+      "Draft a design document for a door update",
+      "Optimize door code for network latency",
+      "Test dynamic lighting effects on doors",
+      "Refine door sound synchronization",
+      "Document proposals for door features",
+      "Brainstorm ideas for secret door puzzles",
+      "Test door state transitions under load",
+      "Plan an update rollout for door improvements",
+      "Review error logs from door interactions",
+      "Collaborate on door security enhancements",
+      "Check compatibility of door assets with updates",
+      "Analyze energy consumption of door animations",
+      "Review the user interface for door status indicators",
+      "Test door interactions in multiplayer mode",
+      "Draft a proposal for door customization",
+      "Review code quality in door functions",
+      "Refactor the door unlocking algorithm",
+      "Create a checklist for door QA testing",
+      "Plan a training session on door development",
+      "Compile a list of door feature ideas",
+      "Test door glitch fixes in beta",
+      "Evaluate door usage metrics",
+      "Draft an email for door feature feedback",
+      "Research advanced collision algorithms",
+      "Brainstorm seasonal themes for doors",
+      "Review door physics simulation data",
+      "Test new door hardware integration",
+      "Optimize door load times",
+      "Plan a collaborative review on door mechanics",
+      "Draft improvements for door error handling",
+      "Assess door module scalability",
+      "Prototype a door mini-game concept",
+      "Brainstorm modular door design",
+      "Evaluate door code for refactoring",
+      "Review community trends for door ideas",
+      "Compile a report on door feature usage",
+      "Test door interaction under high latency",
+      "Draft a roadmap for door updates",
+      "Review logs to identify door bugs",
+      "Analyze the impact of door sound effects",
+      "Plan a presentation on door innovations",
+      "Conduct a team review on door feedback",
+      "Refine door locking mechanism algorithms",
+      "Plan a collaborative coding session on doors",
+      "Update documentation for door modules",
+      "Test door animations in different lighting",
+      "Evaluate overall door system performance",
+      "Plan a meeting to discuss door improvements",
+      "Brainstorm ideas for interactive door puzzles",
+      "Review and update door test suites",
+      "Analyze door usage data over the last month",
+      "Document best practices for door design",
+      "Prototype a hidden door feature",
+      "Review internal door proposals",
+      "Refine the door unlocking minigame",
+      "Plan a creative break to gather door ideas",
+      "Compile a list of door improvement suggestions"
+    ];
+
+    function getRandomThought() {
+      return thoughtsList[getRandomInt(0, thoughtsList.length - 1)];
+    }
+    function getRandomActivity() {
+      return activitiesList[getRandomInt(0, activitiesList.length - 1)];
+    }
+    
+    // Modify getThoughtProcess() to randomly choose from thoughtsList.
+    function getThoughtProcess() {
+      return getRandomThought();
+    }
+    // (Optional) Function to return a random additional subactivity.
+    function getAdditionalActivity() {
+      return getRandomActivity();
+    }
+    
     /* ---------------- Persistent State ---------------- */
     function getDefaultState() {
       return {
         current_ip: "192.241.0.1",
         ip_set_time: Date.now(),
-        current_location: "4184 Berkshire Circle, Chattanooga, TN",
-        target_location: "4184 Berkshire Circle, Chattanooga, TN",
+        current_location: "Home",
+        target_location: "Home",
         isTraveling: false,
         travelStartTime: null,
         travelDuration: 0,
         device_info: "Windows 11 | Ryzen 7 5800X | RTX 3070",
-        energyLevel: 80, // set a default starting energy
+        energyLevel: 80,
         phone_battery: 75,
         phoneCharging: false,
         current_activity: "Initializing",
@@ -167,8 +414,20 @@
         activity_duration: 0,
         persistentHeartRate: 70,
         persistentBodyTemp: 36.5,
-        lastUpdateTime: Date.now()
+        lastUpdateTime: Date.now(),
+        lastSeen: getRandomInt(1,15),
+        keystrokes: 160,
+        cpuUsage: getRandomInt(10,50),
+        uptimeHours: getRandomInt(1,12),
+        uptimeMinutes: getRandomInt(0,59),
+        networkDownload: getRandomFloat(5,15),
+        networkUpload: getRandomFloat(1,5),
+        headphoneStatus: Math.random() < 0.5 ? "🎧 On" : "❌ Off",
+        headphoneVolume: "N/A"
       };
+    }
+    function saveState(state) {
+      localStorage.setItem("simulationState", JSON.stringify(state));
     }
     function loadState() {
       try {
@@ -178,17 +437,14 @@
         return null;
       }
     }
-    function saveState(state) {
-      localStorage.setItem("simulationState", JSON.stringify(state));
-    }
-
-    // Load saved state if available; otherwise, use defaults.
+    
     let simulationState = loadState();
     if (!simulationState) {
       simulationState = getDefaultState();
+      simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
       saveState(simulationState);
     }
-
+    
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
     const myTabId = Date.now() + "-" + Math.random();
@@ -209,66 +465,32 @@
         localStorage.setItem("simulationLeaderTimestamp", now.toString());
       }
     }
-
-    /* ---------------- Break Sub-Activity Helper ---------------- */
-    function getBreakSubActivity() {
-      const subActivities = [
-        "Taking a Break (Binge Watching Tiktok)",
-        "Taking a Break (Having a snack)",
-        "Snack Time – Grabbing a bite",
-        "Taking a Break (Chatting with friends)"
-      ];
-      // Use the previously stored value if available; otherwise, pick one.
-      return simulationState.breakActivity || subActivities[0];
-    }
-
-    /* ---------------- Logical Activity Scheduler ---------------- */
+    
+    /* ---------------- Scheduled Activity Function ---------------- */
     function getScheduledActivity() {
-      const now = new Date();
-      const hour = now.getHours();
-      // If energy is 0, force break.
+      const nowMin = getMinutesSinceMidnight();
       if (simulationState.energyLevel <= 0) {
-        return "Break Time";
-      }
-      if (simulationState.current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
-        return "🛒 Shopping";
-      }
-      if (hour >= 6 && hour < 9) {
-        return (hour < 8) ? "🚿 Morning Shower" : "☀️ Waking up";
-      }
-      if (hour >= 9 && hour < 12) {
-        if (simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN") {
-          return "💻 Working on Doors from home";
-        } else if (simulationState.current_location === "1701 Skyline Dr, Chattanooga, TN 37421") {
-          return "🤝 Collaborating at Redibles House";
-        } else if (simulationState.current_location === "12033 Haycutter Rd, Birchwood, TN") {
-          return "🤝 Meeting with Jasper";
-        } else {
-          return "💻 Working on Doors";
+        if (simulationState.current_location !== "Home") {
+          simulationState.target_location = "Home";
+          simulationState.isTraveling = true;
+          simulationState.travelStartTime = Date.now();
+          simulationState.travelDuration = locationMapping["Home"].travelTime;
+          return "🚗 Traveling Home for a Power Nap";
         }
+        return "☕ Taking a Break to Recharge";
       }
-      if (hour >= 12 && hour < 13) {
-        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
-          return "🚗 Commuting home before lunch";
-        }
-        return "🍴 Lunch break at home";
+      if (simulationState.isTraveling) {
+        let elapsed = Date.now() - simulationState.travelStartTime;
+        let remaining = simulationState.travelDuration - elapsed;
+        let eta = Math.ceil(remaining / 60000);
+        if (eta < 1) eta = 1;
+        return `🚗 Traveling to ${simulationState.target_location} (ETA: ${eta} min)`;
       }
-      if (hour >= 13 && hour < 17) {
-        return simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN" 
-                 ? "💻 Continuing work on Doors from home" 
-                 : "🤝 Collaborating on Doors";
-      }
-      if (hour >= 17 && hour < 18) {
-        return "🚗 Commuting home";
-      }
-      if (hour >= 18 && hour < 20) {
-        return (hour < 19) ? "🍽️ Having dinner" : "🚿 Evening Shower";
-      }
-      return "💤 Sleeping";
+      let scheduled = dailySchedule.find(slot => nowMin >= slot.start && nowMin < slot.end);
+      return scheduled ? scheduled.activity : "💻 Idle (reviewing door code)";
     }
-
+    
     /* ---------------- Simulation Functions ---------------- */
-    // Instead of reinitializing the entire state on each update, we now use the stored state.
     function computeDeltaTime() {
       const now = Date.now();
       const dt = (now - simulationState.lastUpdateTime) / 60000;
@@ -276,28 +498,17 @@
       return dt;
     }
     function updateIPAndLocation(now) {
-      // Update IP only if 5 minutes have passed.
       if (now - simulationState.ip_set_time >= 5 * 60 * 1000) {
         simulationState.current_ip = `192.241.${getRandomInt(0, 255)}.${getRandomInt(0, 255)}`;
         simulationState.ip_set_time = now;
       }
-      // Decide on a new target location only if not already traveling or on break.
-      if (!simulationState.isTraveling && !simulationState.current_activity.toLowerCase().includes("break")) {
-        // Use a low probability so state remains consistent.
-        if (Math.random() < 0.02) {
-          let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
-          // Prevent going to the grocery store if not at home.
-          if (newTarget === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421" &&
-              simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
-            newTarget = "4184 Berkshire Circle, Chattanooga, TN";
-          }
-          if (newTarget !== simulationState.current_location) {
-            simulationState.target_location = newTarget;
-            simulationState.isTraveling = true;
-            simulationState.travelStartTime = now;
-            let mapping = locationMapping[newTarget];
-            simulationState.travelDuration = mapping ? mapping.travelTime : 300000; // default 5 minutes
-          }
+      if (!simulationState.isTraveling && Math.random() < 0.03) {
+        let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
+        if (newTarget !== simulationState.current_location) {
+          simulationState.target_location = newTarget;
+          simulationState.isTraveling = true;
+          simulationState.travelStartTime = now;
+          simulationState.travelDuration = locationMapping[newTarget].travelTime;
         }
       }
     }
@@ -322,53 +533,21 @@
       return `${hours}:${minutes} ${ampm}`;
     }
     function getSleepStatus() {
-      let hour = new Date().getHours();
-      if (hour >= 23 || hour < 6) return "💤 Deep Sleeping";
-      if (hour >= 13 && hour < 15) return "😴 Light Napping";
+      const nowMin = getMinutesSinceMidnight();
+      if (nowMin < 390 || nowMin >= 1348) return "💤 Sleeping";
+      if (nowMin >= 750 && nowMin < 765) return "😴 Short Nap";
       return "Awake";
     }
-    function updateActivityState(now, sleepStatus) {
-      if (simulationState.energyLevel <= 0) {
-        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
-          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
-          simulationState.isTraveling = true;
-          simulationState.travelStartTime = now;
-          simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime;
-          simulationState.current_activity = "🚗 Traveling home for break";
-          simulationState.activity_start_time = now;
-          return;
-        } else {
-          simulationState.current_activity = getBreakSubActivity();
-          simulationState.activity_start_time = now;
-          simulationState.activity_duration = Infinity;
-          return;
-        }
-      }
-      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
+    function updateActivityState(now) {
+      let sleepStatus = getSleepStatus();
+      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Nap")) {
         simulationState.current_activity = sleepStatus;
         simulationState.activity_duration = Infinity;
         simulationState.activity_start_time = now;
         return;
       }
-      if (simulationState.isTraveling) {
-        let mapping = locationMapping[simulationState.target_location];
-        let elapsed = now - simulationState.travelStartTime;
-        let remaining = simulationState.travelDuration - elapsed;
-        let eta = Math.ceil(remaining/60000);
-        if(eta < 1) { eta = 1; }
-        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${eta} min)`;
-        simulationState.activity_duration = simulationState.travelDuration;
-        simulationState.activity_start_time = simulationState.travelStartTime;
-        return;
-      }
-      let scheduled = getScheduledActivity();
-      let hour = new Date().getHours();
-      // If commuting is scheduled outside allowed hours, default to working from home.
-      if (scheduled.includes("Commuting") && (hour < 9 || hour >= 20)) {
-        scheduled = "💻 Working on Doors from home";
-      }
-      simulationState.current_activity = scheduled;
-      simulationState.activity_duration = 600; // keep a consistent activity duration (in seconds)
+      simulationState.current_activity = getScheduledActivity();
+      simulationState.activity_duration = 600;
       simulationState.activity_start_time = now;
     }
     function updatePhoneBattery(dtMinutes) {
@@ -384,16 +563,21 @@
       }
       if (simulationState.phone_battery < 0) simulationState.phone_battery = 0;
     }
-    function updateEnergyLevel(dtMinutes, sleepStatus) {
-      // Work-related activities drain energy slowly.
-      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping") ||
-         simulationState.current_activity.toLowerCase().includes("break") ||
-         simulationState.current_activity.toLowerCase().includes("snack") ||
-         simulationState.current_activity.toLowerCase().includes("lunch")) {
+    function updateEnergyLevel(dtMinutes) {
+      if (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Break") ||
+          simulationState.current_activity.includes("Nap") ||
+          simulationState.current_activity.includes("Wind Down")) {
         simulationState.energyLevel += dtMinutes * 4;
-      } else if (simulationState.current_activity.toLowerCase().includes("work") ||
-                 simulationState.current_activity.toLowerCase().includes("collaborating")) {
-        simulationState.energyLevel -= dtMinutes * 0.5;
+      } else if (simulationState.current_activity.includes("Coding") ||
+                 simulationState.current_activity.includes("Debug") ||
+                 simulationState.current_activity.includes("Designing") ||
+                 simulationState.current_activity.includes("Development") ||
+                 simulationState.current_activity.includes("Prototyping")) {
+        simulationState.energyLevel -= dtMinutes * 0.7;
+      } else if (simulationState.current_activity.includes("Collaboration") ||
+                 simulationState.current_activity.includes("Creative Break")) {
+        simulationState.energyLevel -= dtMinutes * 0.4;
       } else {
         simulationState.energyLevel -= dtMinutes * 0.2;
       }
@@ -401,98 +585,59 @@
     }
     function updateHeartRate() {
       if (simulationState.current_activity.includes("Sleeping") ||
-          simulationState.current_activity.includes("Napping")) {
-        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -1 : 0;
-      } else {
-        simulationState.persistentHeartRate += 0; // keep heart rate stable
+          simulationState.current_activity.includes("Nap")) {
+        simulationState.persistentHeartRate = Math.max(simulationState.persistentHeartRate - 1, 55);
       }
       return simulationState.persistentHeartRate;
     }
     function updateBodyTemp() {
-      // Make slight adjustments based on activity.
       if (simulationState.current_activity.includes("Sleeping") ||
-          simulationState.current_activity.includes("Napping")) {
+          simulationState.current_activity.includes("Nap")) {
         simulationState.persistentBodyTemp = 36.5;
-      } else {
-        simulationState.persistentBodyTemp += 0; // keep body temp steady
       }
-      let fahrenheit = (simulationState.persistentBodyTemp * 9/5)+32;
-      return fahrenheit.toFixed(1)+"°F";
+      let fahrenheit = (simulationState.persistentBodyTemp * 9/5) + 32;
+      return fahrenheit.toFixed(1) + "°F";
     }
     function getStressLevel(activity) {
-      if (activity.includes("Doors") && !activity.includes("Traveling")) return "😰 High";
-      return activity.includes("Traveling") ? "😐 Moderate" : "😌 Low";
+      if (activity.includes("Debug") || activity.includes("Coding")) return "😰 High";
+      if (activity.includes("Break") || activity.includes("Wind Down")) return "😌 Low";
+      return "😐 Moderate";
     }
-    function getThoughtProcess() {
-      if (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping")) {
-        return "I'm dreaming peacefully.";
-      }
-      if (simulationState.current_activity.includes("Traveling")) {
-        return "I hope traffic clears soon.";
-      }
-      if (simulationState.current_activity.toLowerCase().includes("break") ||
-          simulationState.current_activity.toLowerCase().includes("snack")) {
-        return "I'm taking a well-deserved break and recharging.";
-      }
-      if (simulationState.current_activity.toLowerCase().includes("work")) {
-        return "Time to focus on my tasks and finish these assignments.";
-      }
-      return "I need to relax for a moment.";
-    }
-    function getOpenApplications() {
-      return ["Discord", "YouTube", "VSCode"];
-    }
-
     function updateSlowDisplay() {
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
-      
       let locationDisplay = simulationState.isTraveling 
         ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil(Math.max((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000, 1))} min)`
         : simulationState.current_location;
       document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${locationDisplay}`;
-
-      // Determine usage mode based on state.
       let sleepStatus = getSleepStatus();
       let usageMode = simulationState.isTraveling ? "Car" :
-                      (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping") ? "Sleeping" : "PC");
+                      (sleepStatus.includes("Sleeping") || sleepStatus.includes("Nap") ? "Sleeping" : "PC");
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
-
-      let deviceInfo = usageMode === "PC" ? "Windows 11 | Ryzen 7 5800X | RTX 3070" :
+      let deviceInfo = usageMode === "PC" ? simulationState.device_info :
                        (usageMode === "Sleeping" ? "No active device (Sleeping)" : "iPhone 13 | iOS 15");
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${deviceInfo}`;
-
-      let openApps = usageMode === "PC" && !simulationState.isTraveling ? getOpenApplications() : ["Discord", "YouTube"];
+      let openApps = getOpenApplications();
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
-
-      document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
-      document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${getRandomInt(1,12)}h ${getRandomInt(0,59)}m`;
-      let network = { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) };
-      document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${network.download} Mbps ↓ | ${network.upload} Mbps ↑`;
-      let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
-      let headphoneVolume = headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
-      document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
-
+      document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${simulationState.cpuUsage}%`;
+      document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${simulationState.uptimeHours}h ${simulationState.uptimeMinutes}m`;
+      document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${simulationState.networkDownload} Mbps ↓ | ${simulationState.networkUpload} Mbps ↑`;
+      document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${simulationState.headphoneStatus} | Volume: ${simulationState.headphoneVolume}`;
       let activityDisplay = simulationState.current_activity;
-      if(simulationState.isTraveling) {
+      if (simulationState.isTraveling) {
         let remaining = simulationState.travelDuration - (Date.now() - simulationState.travelStartTime);
-        let eta = Math.ceil(remaining/60000);
-        if(eta < 1) { eta = 1; }
-        if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
-          activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
-        } else {
-          activityDisplay = simulationState.current_activity + " (ETA: " + eta + " min)";
-        }
+        let eta = Math.ceil(remaining / 60000);
+        if (eta < 1) eta = 1;
+        activityDisplay = simulationState.target_location === "Home" ?
+                          "🚗 Commuting home (ETA: " + eta + " min)" :
+                          simulationState.current_activity + " (ETA: " + eta + " min)";
       }
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${activityDisplay}`;
-      
-      let keystrokes = (simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break") || simulationState.current_activity.toLowerCase().includes("snack"))
-                        ? 0 : getRandomInt(50,200);
-      document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
+      document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${simulationState.keystrokes} /min`;
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
       document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
-      document.getElementById("sleepField").innerHTML = `<span class="label">🛌 Sleep:</span> ${getSleepStatus()}`;
-      document.getElementById("lastSeenField").innerHTML = `<span class="label">👀 Last Seen:</span> ${getRandomInt(1,15)} seconds ago`;
+      document.getElementById("sleepField").innerHTML = `<span class="label">🛌 Sleep:</span> ${sleepStatus}`;
+      document.getElementById("lastSeenField").innerHTML = `<span class="label">👀 Last Seen:</span> ${simulationState.lastSeen} sec ago`;
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${Math.round(simulationState.phone_battery)}% ${simulationState.phoneCharging ? "(Charging)" : "(Discharging)"}`;
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
       document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
@@ -500,23 +645,31 @@
     function updateTimeField() {
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
-
-    // Update function that only updates necessary parts and then saves the complete state.
     function updateSlowMetrics() {
       tryToBecomeLeader();
       const now = Date.now();
       const dtMinutes = computeDeltaTime();
-      let sleepStatus = getSleepStatus();
       updateIPAndLocation(now);
       updateTravel(now);
-      updateActivityState(now, sleepStatus);
+      updateActivityState(now);
       updatePhoneBattery(dtMinutes);
-      updateEnergyLevel(dtMinutes, sleepStatus);
+      updateEnergyLevel(dtMinutes);
+      if (Math.random() < 0.2) {
+        simulationState.lastSeen = getRandomInt(1,15);
+        simulationState.keystrokes = simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break")
+                                      ? 0 : getRandomInt(50,200);
+        simulationState.cpuUsage = getRandomInt(10,50);
+        simulationState.uptimeHours = getRandomInt(1,12);
+        simulationState.uptimeMinutes = getRandomInt(0,59);
+        simulationState.networkDownload = getRandomFloat(5,15);
+        simulationState.networkUpload = getRandomFloat(1,5);
+        simulationState.headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
+        simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
+      }
       updateLeaderHeartbeat();
       updateSlowDisplay();
       saveState(simulationState);
     }
-
     updateSlowMetrics();
     updateTimeField();
     setInterval(updateSlowMetrics, 30000);
