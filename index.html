@@ -119,11 +119,6 @@
       <div class="field" id="thoughtField"></div>
       <div class="field" id="timeField"></div>
     </div>
-    <!-- Detailed Timeline Section -->
-    <div class="section" id="timeline">
-      <div class="section-title">⏰ Detailed Timeline</div>
-      <div class="field" id="timelineField"></div>
-    </div>
   </div>
 
   <!-- Footer Section -->
@@ -226,64 +221,96 @@
     }
 
     /* ---------------- Logical Activity Scheduler ---------------- */
+    // This version uses your detailed schedule:
+    // • 6:30 – 7:00: Wake up, get ready, eat breakfast, watch TV (with precise micro‑activities)
+    // • 7:00 – 12:08: Work period (with occasional micro‑activities)
+    // • 12:08 – 12:25: Lunch break (17 minutes)
+    // • 12:25 – 18:30: Afternoon work (with one grocery store trip for 28 minutes around 15:00)
+    // • 18:30 – 20:30: Dinner and a bit of work/relaxing after dinner
+    // • 20:30 – 21:18: Watching TV in bed
+    // • 21:18 – 22:28: Watching TikTok and YouTube until sleep
+    // • 22:28 – 6:30: Sleeping
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
-      // If energy is 0, return "Break Time" (a sub-activity will be appended later)
+      const minute = now.getMinutes();
+      const totalMinutes = hour * 60 + minute; // minutes since midnight
+
+      // If energy is zero, force a break
       if (simulationState.energyLevel <= 0) {
-        return "Break Time";
+        return "Break Time – taking a coffee/walk break";
       }
-      if (simulationState.current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
-        return "🛒 Shopping";
+
+      // 6:30 – 7:00 (390–420 minutes): Morning routine with micro‑activities
+      if (totalMinutes >= 390 && totalMinutes < 420) {
+        const microMorning = [
+          "Waking up with 100% energy",
+          "Rolling out of bed",
+          "Walking to the bathroom",
+          "Peeing",
+          "Taking a quick poop",
+          "Brushing teeth",
+          "Taking a shower",
+          "Getting dressed",
+          "Having breakfast",
+          "Watching TV for 10–30 minutes"
+        ];
+        // Divide the 30‑minute window into equal parts for each activity:
+        let partDuration = Math.ceil(30 / microMorning.length);
+        let index = Math.floor((totalMinutes - 390) / partDuration);
+        if (index >= microMorning.length) index = microMorning.length - 1;
+        return microMorning[index];
       }
-      if (hour >= 6 && hour < 8) {
-        return Math.random() < 0.5 ? "☀️ Waking up" : "🚿 Showering & Getting ready";
+      // 7:00 – 12:08 (420–728 minutes): Work period with random micro‑activities
+      if (totalMinutes >= 420 && totalMinutes < 728) {
+        const workActivities = [
+          "Working on projects",
+          "Reviewing emails",
+          "Taking a short coffee break",
+          "Walking to the bathroom to pee",
+          "Stretching at the desk",
+          "Focused coding session",
+          "Brief pause to check notifications"
+        ];
+        return workActivities[getRandomInt(0, workActivities.length - 1)];
       }
-      if (hour >= 8 && hour < 9) {
-        if (Math.random() < 0.2) {
-          return Math.random() < 0.5 ? "🚗 Commuting to work at Redibles House" : "🚗 Commuting to work at Jasper's House";
+      // 12:08 – 12:25 (728–745 minutes): Lunch break (17 minutes)
+      if (totalMinutes >= 728 && totalMinutes < 745) {
+        return "Eating lunch (17 minutes)";
+      }
+      // 12:25 – 18:30 (745–1110 minutes): Afternoon work
+      if (totalMinutes >= 745 && totalMinutes < 1110) {
+        // Grocery store trip: assume between 15:00 (900) and 15:28 (928) minutes
+        if (totalMinutes >= 900 && totalMinutes < 928) {
+          return "At the grocery store (28 minutes)";
         }
-        return "💻 Starting work on Doors from home";
+        const afternoonActivities = [
+          "Working on projects",
+          "Taking a quick coffee break",
+          "Walking to the bathroom (pee)",
+          "Stretching and refocusing",
+          "Answering emails"
+        ];
+        return afternoonActivities[getRandomInt(0, afternoonActivities.length - 1)];
       }
-      if (hour >= 9 && hour < 12) {
-        if (Math.random() < 0.1) {
-          return "💤 Napping at the keyboard";
-        }
-        if (simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN") {
-          return "💻 Working on Doors from home";
-        } else if (simulationState.current_location === "1701 Skyline Dr, Chattanooga, TN 37421") {
-          return "🤝 Collaborating at Redibles House";
-        } else if (simulationState.current_location === "12033 Haycutter Rd, Birchwood, TN") {
-          return "🤝 Meeting with Jasper";
+      // 18:30 – 20:30 (1110–1230 minutes): Evening routine – dinner then light work/relaxation
+      if (totalMinutes >= 1110 && totalMinutes < 1230) {
+        if (totalMinutes < 1125) { // first 15 minutes for dinner
+          return "Eating dinner";
         } else {
-          return "💻 Working on Doors";
+          return "Light work or relaxing after dinner";
         }
       }
-      if (hour >= 12 && hour < 13) {
-        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
-          return "🚗 Commuting home before lunch";
-        }
-        if (Math.random() < 0.3) {
-          return "🚗 Commuting to the grocery store";
-        }
-        return "🍴 Lunch break at home";
+      // 20:30 – 21:18 (1230–1278 minutes): TV in bed
+      if (totalMinutes >= 1230 && totalMinutes < 1278) {
+        return "Watching TV in bed";
       }
-      if (hour >= 13 && hour < 17) {
-        if (Math.random() < 0.1) {
-          return "💤 Brief nap at work";
-        }
-        return simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN" ? "💻 Continuing work on Doors from home" : "🤝 Collaborating on Doors";
+      // 21:18 – 22:28 (1278–1348 minutes): TikTok and YouTube time
+      if (totalMinutes >= 1278 && totalMinutes < 1348) {
+        return "Watching TikTok and YouTube";
       }
-      if (hour >= 17 && hour < 18) {
-        return "🚗 Commuting home";
-      }
-      if (hour >= 18 && hour < 20) {
-        return hour < 19 ? "🍽️ Having dinner" : "🚿 Showering";
-      }
-      if (hour >= 20 && hour < 22) {
-        return "📺 Relaxing & Unwinding";
-      }
-      return "💤 Sleeping";
+      // Else, it's sleeping time (22:28–6:30)
+      return "Sleeping";
     }
 
     /* ---------------- Simulation Functions ---------------- */
@@ -488,8 +515,6 @@
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
       let usageMode = simulationState.isTraveling ? "Car" :
                       (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random()<0.5 ? "PC" : "Phone"));
-      // Dummy open apps function – you can define your own logic here
-      function getOpenApplications() { return ["Chrome", "VS Code", "Spotify"]; }
       let openApps = (usageMode==="PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
@@ -505,6 +530,7 @@
       let activityDisplay = simulationState.current_activity;
       if(simulationState.isTraveling) {
         let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
+        // If commuting home, show "Commuting home (ETA: X min)"
         if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
           activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
         } else {
@@ -528,33 +554,6 @@
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
 
-    /* ---------------- Detailed Timeline Functions ---------------- */
-    // Define timeline events using minutes after midnight (e.g., 6:30 AM = 390)
-    const timelineEvents = [
-      { start: 390, end: 420, description: "6:30–7:00 AM: Wake-up & morning routine (bed, bathroom, grooming, breakfast, cleanup)." },
-      { start: 420, end: 440, description: "7:00–7:20 AM: Watching TV (relaxing & mentally preparing for the day)." },
-      { start: 445, end: 450, description: "7:25–7:30 AM: Setting up workspace and refilling coffee." },
-      { start: 450, end: 540, description: "7:30–9:00 AM: Morning work session (focused tasks, with a micro-break around 8:15 AM)." },
-      { start: 728, end: 745, description: "12:08–12:25 PM: Lunch break (quick meal and cleanup)." },
-      { start: 745, end: 950, description: "12:25–3:50 PM: Afternoon work session (with brief breaks for refreshment or a quick walk)." },
-      { start: 960, end: 988, description: "4:00–4:28 PM: Grocery store run (shopping & possible restroom stop in-store)." },
-      { start: 990, end: 1110, description: "4:30–6:30 PM: Late afternoon work or visiting friends (Jasper’s/Redibles House)." },
-      { start: 1110, end: 1155, description: "6:30–7:15 PM: Dinner (preparation, eating, and kitchen cleanup)." },
-      { start: 1155, end: 1215, description: "7:15–8:15 PM: Light work or a refreshing walk post-dinner." },
-      { start: 1230, end: 1278, description: "8:30–9:18 PM: Relaxing in bed watching TV." },
-      { start: 1278, end: 1348, description: "9:18–10:28 PM: Digital leisure (scrolling TikTok and YouTube)." },
-      { start: 1348, end: 1440, description: "After 10:28 PM: Lights out & deep sleep (recharging for the next day)." }
-    ];
-    // Update timeline display based on current time (in minutes after midnight)
-    function updateTimeline() {
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const currentEvent = timelineEvents.find(event => currentMinutes >= event.start && currentMinutes < event.end);
-      const timelineText = currentEvent ? currentEvent.description : "No scheduled activity at this time.";
-      document.getElementById("timelineField").innerText = timelineText;
-    }
-
-    /* ---------------- Main Simulation Update ---------------- */
     function updateSlowMetrics() {
       tryToBecomeLeader();
       let storedState = loadState();
@@ -570,15 +569,12 @@
       saveState(simulationState);
       updateLeaderHeartbeat();
       updateSlowDisplay();
-      updateTimeline();  // Update the detailed timeline display
     }
 
     updateSlowMetrics();
     updateTimeField();
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
-    // Update timeline every minute
-    setInterval(updateTimeline, 60000);
     window.addEventListener("beforeunload", function() {
       saveState(simulationState);
     });
