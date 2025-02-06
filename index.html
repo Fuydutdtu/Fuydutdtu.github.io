@@ -119,6 +119,11 @@
       <div class="field" id="thoughtField"></div>
       <div class="field" id="timeField"></div>
     </div>
+    <!-- Detailed Timeline Section -->
+    <div class="section" id="timeline">
+      <div class="section-title">⏰ Detailed Timeline</div>
+      <div class="field" id="timelineField"></div>
+    </div>
   </div>
 
   <!-- Footer Section -->
@@ -460,7 +465,7 @@
       if (simulationState.current_activity && 
          (simulationState.current_activity.toLowerCase().includes("break") ||
           simulationState.current_activity.toLowerCase().includes("snack"))) {
-        return "I'm taking a well-deserved break and recharging.";
+        return "I'm taking a well-deserved break and rethinking life.";
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
         return "Time to focus on my code and finish these tasks.";
@@ -483,6 +488,8 @@
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
       let usageMode = simulationState.isTraveling ? "Car" :
                       (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random()<0.5 ? "PC" : "Phone"));
+      // Dummy open apps function – you can define your own logic here
+      function getOpenApplications() { return ["Chrome", "VS Code", "Spotify"]; }
       let openApps = (usageMode==="PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
@@ -498,7 +505,6 @@
       let activityDisplay = simulationState.current_activity;
       if(simulationState.isTraveling) {
         let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
-        // If commuting home, show "Commuting home (ETA: X min)"
         if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
           activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
         } else {
@@ -522,6 +528,33 @@
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
 
+    /* ---------------- Detailed Timeline Functions ---------------- */
+    // Define timeline events using minutes after midnight (e.g., 6:30 AM = 390)
+    const timelineEvents = [
+      { start: 390, end: 420, description: "6:30–7:00 AM: Wake-up & morning routine (bed, bathroom, grooming, breakfast, cleanup)." },
+      { start: 420, end: 440, description: "7:00–7:20 AM: Watching TV (relaxing & mentally preparing for the day)." },
+      { start: 445, end: 450, description: "7:25–7:30 AM: Setting up workspace and refilling coffee." },
+      { start: 450, end: 540, description: "7:30–9:00 AM: Morning work session (focused tasks, with a micro-break around 8:15 AM)." },
+      { start: 728, end: 745, description: "12:08–12:25 PM: Lunch break (quick meal and cleanup)." },
+      { start: 745, end: 950, description: "12:25–3:50 PM: Afternoon work session (with brief breaks for refreshment or a quick walk)." },
+      { start: 960, end: 988, description: "4:00–4:28 PM: Grocery store run (shopping & possible restroom stop in-store)." },
+      { start: 990, end: 1110, description: "4:30–6:30 PM: Late afternoon work or visiting friends (Jasper’s/Redibles House)." },
+      { start: 1110, end: 1155, description: "6:30–7:15 PM: Dinner (preparation, eating, and kitchen cleanup)." },
+      { start: 1155, end: 1215, description: "7:15–8:15 PM: Light work or a refreshing walk post-dinner." },
+      { start: 1230, end: 1278, description: "8:30–9:18 PM: Relaxing in bed watching TV." },
+      { start: 1278, end: 1348, description: "9:18–10:28 PM: Digital leisure (scrolling TikTok and YouTube)." },
+      { start: 1348, end: 1440, description: "After 10:28 PM: Lights out & deep sleep (recharging for the next day)." }
+    ];
+    // Update timeline display based on current time (in minutes after midnight)
+    function updateTimeline() {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const currentEvent = timelineEvents.find(event => currentMinutes >= event.start && currentMinutes < event.end);
+      const timelineText = currentEvent ? currentEvent.description : "No scheduled activity at this time.";
+      document.getElementById("timelineField").innerText = timelineText;
+    }
+
+    /* ---------------- Main Simulation Update ---------------- */
     function updateSlowMetrics() {
       tryToBecomeLeader();
       let storedState = loadState();
@@ -537,12 +570,15 @@
       saveState(simulationState);
       updateLeaderHeartbeat();
       updateSlowDisplay();
+      updateTimeline();  // Update the detailed timeline display
     }
 
     updateSlowMetrics();
     updateTimeField();
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
+    // Update timeline every minute
+    setInterval(updateTimeline, 60000);
     window.addEventListener("beforeunload", function() {
       saveState(simulationState);
     });
