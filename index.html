@@ -140,10 +140,6 @@
     }
 
     /* ---------------- Location & Activity Data ---------------- */
-    // Travel times (in ms):
-    // Grocery Store: 8.5 minutes (510,000 ms)
-    // Redibles House: 9 minutes (540,000 ms)
-    // Jasper's House: 46 minutes (2,760,000 ms)
     const locationMapping = {
       "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
       "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
@@ -163,14 +159,14 @@
         travelStartTime: null,
         travelDuration: 0,
         device_info: "Windows 11 | Ryzen 7 5800X | RTX 3070",
-        energyLevel: getRandomInt(50, 90),
-        phone_battery: getRandomInt(50, 80),
+        energyLevel: 80, // set a default starting energy
+        phone_battery: 75,
         phoneCharging: false,
         current_activity: "Initializing",
         activity_start_time: Date.now(),
         activity_duration: 0,
-        persistentHeartRate: getRandomInt(60, 80),
-        persistentBodyTemp: 36.5 + (Math.random() - 0.5),
+        persistentHeartRate: 70,
+        persistentBodyTemp: 36.5,
         lastUpdateTime: Date.now()
       };
     }
@@ -185,8 +181,13 @@
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
     }
-    let loadedState = loadState();
-    simulationState = Object.assign(getDefaultState(), loadedState || {});
+
+    // Load saved state if available; otherwise, use defaults.
+    let simulationState = loadState();
+    if (!simulationState) {
+      simulationState = getDefaultState();
+      saveState(simulationState);
+    }
 
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
@@ -217,33 +218,25 @@
         "Snack Time – Grabbing a bite",
         "Taking a Break (Chatting with friends)"
       ];
-      return subActivities[getRandomInt(0, subActivities.length - 1)];
+      // Use the previously stored value if available; otherwise, pick one.
+      return simulationState.breakActivity || subActivities[0];
     }
 
     /* ---------------- Logical Activity Scheduler ---------------- */
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
-      // If energy is 0, return "Break Time" (a sub-activity will be appended later)
+      // If energy is 0, force break.
       if (simulationState.energyLevel <= 0) {
         return "Break Time";
       }
       if (simulationState.current_location === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
         return "🛒 Shopping";
       }
-      if (hour >= 6 && hour < 8) {
-        return Math.random() < 0.5 ? "☀️ Waking up" : "🚿 Showering & Getting ready";
-      }
-      if (hour >= 8 && hour < 9) {
-        if (Math.random() < 0.2) {
-          return Math.random() < 0.5 ? "🚗 Commuting to work at Redibles House" : "🚗 Commuting to work at Jasper's House";
-        }
-        return "💻 Starting work on Doors from home";
+      if (hour >= 6 && hour < 9) {
+        return (hour < 8) ? "🚿 Morning Shower" : "☀️ Waking up";
       }
       if (hour >= 9 && hour < 12) {
-        if (Math.random() < 0.1) {
-          return "💤 Napping at the keyboard";
-        }
         if (simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN") {
           return "💻 Working on Doors from home";
         } else if (simulationState.current_location === "1701 Skyline Dr, Chattanooga, TN 37421") {
@@ -258,30 +251,24 @@
         if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
           return "🚗 Commuting home before lunch";
         }
-        if (Math.random() < 0.3) {
-          return "🚗 Commuting to the grocery store";
-        }
         return "🍴 Lunch break at home";
       }
       if (hour >= 13 && hour < 17) {
-        if (Math.random() < 0.1) {
-          return "💤 Brief nap at work";
-        }
-        return simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN" ? "💻 Continuing work on Doors from home" : "🤝 Collaborating on Doors";
+        return simulationState.current_location === "4184 Berkshire Circle, Chattanooga, TN" 
+                 ? "💻 Continuing work on Doors from home" 
+                 : "🤝 Collaborating on Doors";
       }
       if (hour >= 17 && hour < 18) {
         return "🚗 Commuting home";
       }
       if (hour >= 18 && hour < 20) {
-        return hour < 19 ? "🍽️ Having dinner" : "🚿 Showering";
-      }
-      if (hour >= 20 && hour < 22) {
-        return "📺 Relaxing & Unwinding";
+        return (hour < 19) ? "🍽️ Having dinner" : "🚿 Evening Shower";
       }
       return "💤 Sleeping";
     }
 
     /* ---------------- Simulation Functions ---------------- */
+    // Instead of reinitializing the entire state on each update, we now use the stored state.
     function computeDeltaTime() {
       const now = Date.now();
       const dt = (now - simulationState.lastUpdateTime) / 60000;
@@ -289,13 +276,17 @@
       return dt;
     }
     function updateIPAndLocation(now) {
+      // Update IP only if 5 minutes have passed.
       if (now - simulationState.ip_set_time >= 5 * 60 * 1000) {
         simulationState.current_ip = `192.241.${getRandomInt(0, 255)}.${getRandomInt(0, 255)}`;
         simulationState.ip_set_time = now;
       }
+      // Decide on a new target location only if not already traveling or on break.
       if (!simulationState.isTraveling && !simulationState.current_activity.toLowerCase().includes("break")) {
-        if (Math.random() < 0.05) {
+        // Use a low probability so state remains consistent.
+        if (Math.random() < 0.02) {
           let newTarget = addresses[getRandomInt(0, addresses.length - 1)];
+          // Prevent going to the grocery store if not at home.
           if (newTarget === "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421" &&
               simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
             newTarget = "4184 Berkshire Circle, Chattanooga, TN";
@@ -305,7 +296,7 @@
             simulationState.isTraveling = true;
             simulationState.travelStartTime = now;
             let mapping = locationMapping[newTarget];
-            simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180,600)*1000;
+            simulationState.travelDuration = mapping ? mapping.travelTime : 300000; // default 5 minutes
           }
         }
       }
@@ -333,7 +324,7 @@
     function getSleepStatus() {
       let hour = new Date().getHours();
       if (hour >= 23 || hour < 6) return "💤 Deep Sleeping";
-      if (hour >= 13 && hour < 15 && Math.random() < 0.5) return "😴 Light Napping";
+      if (hour >= 13 && hour < 15) return "😴 Light Napping";
       return "Awake";
     }
     function updateActivityState(now, sleepStatus) {
@@ -363,35 +354,21 @@
         let mapping = locationMapping[simulationState.target_location];
         let elapsed = now - simulationState.travelStartTime;
         let remaining = simulationState.travelDuration - elapsed;
-        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${remaining > 0 ? Math.ceil(remaining/60000) : 0} min)`;
+        let eta = Math.ceil(remaining/60000);
+        if(eta < 1) { eta = 1; }
+        simulationState.current_activity = `🚗 Traveling to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"}, ETA: ${eta} min)`;
         simulationState.activity_duration = simulationState.travelDuration;
         simulationState.activity_start_time = simulationState.travelStartTime;
         return;
       }
       let scheduled = getScheduledActivity();
-      if (scheduled.includes("Commuting")) {
-        if (scheduled.includes("Redibles")) {
-          simulationState.target_location = "1701 Skyline Dr, Chattanooga, TN 37421";
-        } else if (scheduled.includes("Jasper")) {
-          simulationState.target_location = "12033 Haycutter Rd, Birchwood, TN";
-        } else if (scheduled.includes("grocery")) {
-          simulationState.target_location = "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421";
-        } else if (scheduled.includes("home")) {
-          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
-        }
-        if (simulationState.current_location !== simulationState.target_location) {
-          simulationState.isTraveling = true;
-          simulationState.travelStartTime = now;
-          let mapping = locationMapping[simulationState.target_location];
-          simulationState.travelDuration = mapping ? mapping.travelTime : getRandomInt(180,600)*1000;
-          simulationState.current_activity = scheduled;
-          simulationState.activity_duration = simulationState.travelDuration;
-          simulationState.activity_start_time = now;
-          return;
-        }
+      let hour = new Date().getHours();
+      // If commuting is scheduled outside allowed hours, default to working from home.
+      if (scheduled.includes("Commuting") && (hour < 9 || hour >= 20)) {
+        scheduled = "💻 Working on Doors from home";
       }
       simulationState.current_activity = scheduled;
-      simulationState.activity_duration = getRandomInt(300,900);
+      simulationState.activity_duration = 600; // keep a consistent activity duration (in seconds)
       simulationState.activity_start_time = now;
     }
     function updatePhoneBattery(dtMinutes) {
@@ -408,97 +385,98 @@
       if (simulationState.phone_battery < 0) simulationState.phone_battery = 0;
     }
     function updateEnergyLevel(dtMinutes, sleepStatus) {
+      // Work-related activities drain energy slowly.
       if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping") ||
          simulationState.current_activity.toLowerCase().includes("break") ||
-         simulationState.current_activity.toLowerCase().includes("snack")) {
+         simulationState.current_activity.toLowerCase().includes("snack") ||
+         simulationState.current_activity.toLowerCase().includes("lunch")) {
         simulationState.energyLevel += dtMinutes * 4;
+      } else if (simulationState.current_activity.toLowerCase().includes("work") ||
+                 simulationState.current_activity.toLowerCase().includes("collaborating")) {
+        simulationState.energyLevel -= dtMinutes * 0.5;
       } else {
-        simulationState.energyLevel -= dtMinutes * 1;
+        simulationState.energyLevel -= dtMinutes * 0.2;
       }
       simulationState.energyLevel = Math.min(Math.max(simulationState.energyLevel, 0), 100);
     }
     function updateHeartRate() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
-          simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -getRandomInt(1,3) : getRandomInt(0,1);
+      if (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Napping")) {
+        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -1 : 0;
       } else {
-        simulationState.persistentHeartRate += getRandomInt(-2,2);
+        simulationState.persistentHeartRate += 0; // keep heart rate stable
       }
-      simulationState.persistentHeartRate = Math.min(Math.max(simulationState.persistentHeartRate, 50), 110);
       return simulationState.persistentHeartRate;
     }
     function updateBodyTemp() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
-          simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentBodyTemp -= Math.abs((Math.random()-0.5)*0.2);
+      // Make slight adjustments based on activity.
+      if (simulationState.current_activity.includes("Sleeping") ||
+          simulationState.current_activity.includes("Napping")) {
+        simulationState.persistentBodyTemp = 36.5;
       } else {
-        simulationState.persistentBodyTemp += (Math.random()-0.5)*0.2;
-      }
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
-          simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,35.5),37.0);
-      } else {
-        simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,36.0),37.5);
+        simulationState.persistentBodyTemp += 0; // keep body temp steady
       }
       let fahrenheit = (simulationState.persistentBodyTemp * 9/5)+32;
       return fahrenheit.toFixed(1)+"°F";
     }
     function getStressLevel(activity) {
-      if (activity && activity.includes("Doors") && !activity.includes("Traveling")) return "😰 High";
-      return activity && activity.includes("Traveling") ? "😐 Moderate" : (Math.random()<0.5 ? "😌 Low" : "😐 Moderate");
+      if (activity.includes("Doors") && !activity.includes("Traveling")) return "😰 High";
+      return activity.includes("Traveling") ? "😐 Moderate" : "😌 Low";
     }
     function getThoughtProcess() {
-      if (simulationState.current_activity && simulationState.current_activity.includes("Traveling")) {
-        const travelThoughts = [
-          "I hope traffic clears soon.",
-          "Maybe I'll listen to some tunes while driving.",
-          "I should check the route for delays.",
-          "Looking forward to arriving soon."
-        ];
-        return travelThoughts[getRandomInt(0, travelThoughts.length - 1)];
+      if (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping")) {
+        return "I'm dreaming peacefully.";
       }
-      if (simulationState.current_activity && 
-         (simulationState.current_activity.toLowerCase().includes("break") ||
-          simulationState.current_activity.toLowerCase().includes("snack"))) {
+      if (simulationState.current_activity.includes("Traveling")) {
+        return "I hope traffic clears soon.";
+      }
+      if (simulationState.current_activity.toLowerCase().includes("break") ||
+          simulationState.current_activity.toLowerCase().includes("snack")) {
         return "I'm taking a well-deserved break and recharging.";
       }
-      if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
-        return "Time to focus on my code and finish these tasks.";
+      if (simulationState.current_activity.toLowerCase().includes("work")) {
+        return "Time to focus on my tasks and finish these assignments.";
       }
-      const baseThoughts = [
-        "Maybe a quick coffee break will help.",
-        "Time to check some game stats.",
-        "I need to relax for a moment."
-      ];
-      return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
+      return "I need to relax for a moment.";
+    }
+    function getOpenApplications() {
+      return ["Discord", "YouTube", "VSCode"];
     }
 
     function updateSlowDisplay() {
-      console.log("Updating display...");
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
+      
       let locationDisplay = simulationState.isTraveling 
-        ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000)} min)`
+        ? `🚗 Traveling to ${simulationState.target_location} (ETA: ${Math.ceil(Math.max((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime))/60000, 1))} min)`
         : simulationState.current_location;
       document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${locationDisplay}`;
-      document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${simulationState.device_info}`;
+
+      // Determine usage mode based on state.
+      let sleepStatus = getSleepStatus();
       let usageMode = simulationState.isTraveling ? "Car" :
-                      (getSleepStatus().includes("Sleeping") || getSleepStatus().includes("Napping") ? "Sleeping" : (Math.random()<0.5 ? "PC" : "Phone"));
-      let openApps = (usageMode==="PC" && !simulationState.isTraveling) ? getOpenApplications() : ["Discord", "YouTube"];
+                      (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping") ? "Sleeping" : "PC");
+      document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
+
+      let deviceInfo = usageMode === "PC" ? "Windows 11 | Ryzen 7 5800X | RTX 3070" :
+                       (usageMode === "Sleeping" ? "No active device (Sleeping)" : "iPhone 13 | iOS 15");
+      document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${deviceInfo}`;
+
+      let openApps = usageMode === "PC" && !simulationState.isTraveling ? getOpenApplications() : ["Discord", "YouTube"];
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : "📱 Mobile Apps:"}</span> ${openApps.join(", ")}`;
+
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${getRandomInt(10,50)}%`;
       document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${getRandomInt(1,12)}h ${getRandomInt(0,59)}m`;
       let network = { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) };
       document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${network.download} Mbps ↓ | ${network.upload} Mbps ↑`;
-      let headphoneStatus = Math.random()<0.5 ? "🎧 On" : "❌ Off";
-      let headphoneVolume = headphoneStatus==="🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
+      let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
+      let headphoneVolume = headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${headphoneVolume}`;
-      document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
-      
-      // If traveling, update the activity text with ETA.
+
       let activityDisplay = simulationState.current_activity;
       if(simulationState.isTraveling) {
-        let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
-        // If commuting home, show "Commuting home (ETA: X min)"
+        let remaining = simulationState.travelDuration - (Date.now() - simulationState.travelStartTime);
+        let eta = Math.ceil(remaining/60000);
+        if(eta < 1) { eta = 1; }
         if(simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
           activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
         } else {
@@ -506,7 +484,8 @@
         }
       }
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${activityDisplay}`;
-      let keystrokes = simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break") || simulationState.current_activity.toLowerCase().includes("snack")
+      
+      let keystrokes = (simulationState.isTraveling || simulationState.current_activity.toLowerCase().includes("break") || simulationState.current_activity.toLowerCase().includes("snack"))
                         ? 0 : getRandomInt(50,200);
       document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
@@ -522,21 +501,20 @@
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ EST Time:</span> ${getESTTime()}`;
     }
 
+    // Update function that only updates necessary parts and then saves the complete state.
     function updateSlowMetrics() {
       tryToBecomeLeader();
-      let storedState = loadState();
-      simulationState = Object.assign(getDefaultState(), storedState || {});
       const now = Date.now();
       const dtMinutes = computeDeltaTime();
-      const sleepStatus = getSleepStatus();
+      let sleepStatus = getSleepStatus();
       updateIPAndLocation(now);
       updateTravel(now);
       updateActivityState(now, sleepStatus);
       updatePhoneBattery(dtMinutes);
       updateEnergyLevel(dtMinutes, sleepStatus);
-      saveState(simulationState);
       updateLeaderHeartbeat();
       updateSlowDisplay();
+      saveState(simulationState);
     }
 
     updateSlowMetrics();
