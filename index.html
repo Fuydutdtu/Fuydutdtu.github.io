@@ -121,7 +121,7 @@
       <div class="field" id="timeField"></div>
     </div>
   </div>
-
+  
   <!-- Footer Section -->
   <footer>
     <img src="images/pfp.jpg" alt="Profile Picture">
@@ -130,7 +130,7 @@
       Detailed tracking for your door development day.
     </div>
   </footer>
-
+  
   <script>
     /* ---------------- Utility Functions ---------------- */
     function getRandomInt(min, max) {
@@ -150,7 +150,6 @@
     }
     
     /* ---------------- Thoughts & Activities Data ---------------- */
-    // Default arrays; you can extend these as needed.
     const defaultThoughts = [ 
       "Time to optimize the door collision detection algorithm.",
       "Reviewing the door unlocking logic—tighten security.",
@@ -167,15 +166,30 @@
       "Debug door unlocking issues"
       // ... (extend to 50+ entries)
     ];
-    // For this client-side version, we can load data from localStorage if needed.
     let thoughtsList = defaultThoughts.slice();
     let activitiesList = defaultActivities.slice();
+    function getRandomThought() {
+      const list = thoughtsList.length ? thoughtsList : defaultThoughts;
+      return list[getRandomInt(0, list.length - 1)];
+    }
+    function getRandomActivity() {
+      const list = activitiesList.length ? activitiesList : defaultActivities;
+      return list[getRandomInt(0, list.length - 1)];
+    }
+    function getThoughtProcess() {
+      return getRandomThought();
+    }
+    function getAdditionalActivity() {
+      return getRandomActivity();
+    }
     
     /* ---------------- State Persistence Using localStorage ---------------- */
     function loadStateFromStorage() {
       try {
         let stateStr = localStorage.getItem("simulationState");
-        if (stateStr) return JSON.parse(stateStr);
+        if (stateStr && stateStr.trim().length > 0) {
+          return JSON.parse(stateStr);
+        }
       } catch(e) {
         console.error("Error parsing stored state:", e);
       }
@@ -188,7 +202,6 @@
         console.error("Error saving state to storage:", e);
       }
     }
-    
     function getDefaultState() {
       return {
         current_ip: "192.241.0.1",
@@ -221,7 +234,7 @@
     }
     
     /* ---------------- Location & Schedule Data ---------------- */
-    // Address mapping (with travel times in ms)
+    // Address mapping with travel times
     const locationMapping = {
       "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
       "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
@@ -230,7 +243,7 @@
     };
     const addresses = Object.keys(locationMapping);
     
-    // Detailed daily schedule (times in minutes since midnight)
+    // Detailed daily schedule (in minutes since midnight): Wake at 6:30 (390) to sleep at 22:28 (1348)
     const dailySchedule = [
       { start: 390, end: 405, activity: "🚽 Morning Routine: Wake up, bathroom, brush teeth" },
       { start: 405, end: 435, activity: "☕ Breakfast & Daily Planning" },
@@ -452,15 +465,9 @@
       updateSlowDisplay();
       saveStateToStorage(simulationState);
     }
-    function tryToBecomeLeader() {
-      let currentLeader = localStorage.getItem("simulationLeader");
-      let leaderTimestamp = parseInt(localStorage.getItem("simulationLeaderTimestamp") || "0", 10);
-      let now = Date.now();
-      if (!currentLeader || (now - leaderTimestamp > 2000)) {
-        localStorage.setItem("simulationLeader", myTabId);
-        localStorage.setItem("simulationLeaderTimestamp", now.toString());
-      }
-    }
+    
+    /* ---------------- Leader Election (for multi-tab control) ---------------- */
+    const LEADER_TIMEOUT = 2000;
     const myTabId = Date.now() + "-" + Math.random();
     function isLeader() {
       return localStorage.getItem("simulationLeader") === myTabId;
@@ -470,8 +477,59 @@
         localStorage.setItem("simulationLeaderTimestamp", Date.now().toString());
       }
     }
+    function tryToBecomeLeader() {
+      let currentLeader = localStorage.getItem("simulationLeader");
+      let leaderTimestamp = parseInt(localStorage.getItem("simulationLeaderTimestamp") || "0", 10);
+      let now = Date.now();
+      if (!currentLeader || (now - leaderTimestamp > LEADER_TIMEOUT)) {
+        localStorage.setItem("simulationLeader", myTabId);
+        localStorage.setItem("simulationLeaderTimestamp", now.toString());
+      }
+    }
+    
+    /* ---------------- Scheduled Activity Function ---------------- */
+    function getScheduledActivity() {
+      const nowMin = getMinutesSinceMidnight();
+      if (simulationState.energyLevel <= 0) {
+        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
+          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
+          simulationState.isTraveling = true;
+          simulationState.travelStartTime = Date.now();
+          simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime;
+          return "🚗 Traveling Home for a Power Nap";
+        }
+        return "☕ Taking a Break to Recharge";
+      }
+      if (simulationState.isTraveling) {
+        let elapsed = Date.now() - simulationState.travelStartTime;
+        let remaining = simulationState.travelDuration - elapsed;
+        let eta = Math.ceil(remaining / 60000);
+        if (eta < 1) eta = 1;
+        return `🚗 Traveling to ${simulationState.target_location} (ETA: ${eta} min)`;
+      }
+      let scheduled = dailySchedule.find(slot => nowMin >= slot.start && nowMin < slot.end);
+      return scheduled ? scheduled.activity : "💻 Idle (reviewing doors code)";
+    }
+    
+    function updateActivityState(now) {
+      let sleepStatus = getSleepStatus();
+      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Nap")) {
+        simulationState.current_activity = sleepStatus;
+        simulationState.activity_duration = Infinity;
+        simulationState.activity_start_time = now;
+        return;
+      }
+      simulationState.current_activity = getScheduledActivity();
+      simulationState.activity_duration = 600;
+      simulationState.activity_start_time = now;
+    }
+    
+    /* ---------------- Main Update Loop ---------------- */
     setInterval(updateSlowMetrics, 30000);
     setInterval(updateTimeField, 1000);
+    // Initial update
+    updateSlowMetrics();
+    updateTimeField();
   </script>
 </body>
 </html>
