@@ -143,12 +143,21 @@
       const now = new Date();
       return now.getHours() * 60 + now.getMinutes();
     }
-
+    
+    /* ---------------- Fallback for getOpenApplications ---------------- */
+    function getOpenApplications() {
+      return ["Roblox Studio", "VSCode", "Discord"];
+    }
+    
     /* ---------------- Load External JSON Data ---------------- */
     async function loadJSON(url) {
       try {
         let response = await fetch(url);
-        if (response.ok) return await response.json();
+        if (response.ok) {
+          let text = await response.text();
+          if (!text) return null;
+          return JSON.parse(text);
+        }
       } catch(e) {
         console.error("Error loading JSON from", url, e);
       }
@@ -191,12 +200,9 @@
     function getAdditionalActivity() {
       return getRandomActivity();
     }
-
+    
     /* ---------------- Location & Activity Data ---------------- */
-    // Original address mapping with travel times (in ms):
-    // Grocery Store: 8.5 minutes (510,000 ms)
-    // Redibles House: 9 minutes (540,000 ms)
-    // Jasper's House: 46 minutes (2,760,000 ms)
+    // Original address mapping with travel times (in ms)
     const locationMapping = {
       "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
       "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421": { description: "Grocery Store", travelTime: 510000 },
@@ -204,7 +210,7 @@
       "12033 Haycutter Rd, Birchwood, TN": { description: "Jasper's House", travelTime: 2760000 }
     };
     const addresses = Object.keys(locationMapping);
-
+    
     /* ---------------- Detailed Daily Schedule ---------------- */
     // Times (in minutes since midnight): Wake at 6:30 (390) and sleep at 22:28 (1348)
     const dailySchedule = [
@@ -222,12 +228,16 @@
       { start: 1080, end: 1230, activity: "🎮 Creative Break: Play Ragdoll Universe & review ideas" },
       { start: 1230, end: 1348, activity: "🌙 Wind Down: Wrap up work, plan next day, personal time" }
     ];
-
+    
     /* ---------------- Server-Based State Persistence ---------------- */
     async function loadStateFromServer() {
       try {
         let response = await fetch('./data/state.json');
-        if (response.ok) return await response.json();
+        if (response.ok) {
+          let text = await response.text();
+          if (!text) return getDefaultState();
+          return JSON.parse(text);
+        }
       } catch(e) {
         console.error("Error loading state from server:", e);
       }
@@ -274,13 +284,13 @@
         headphoneVolume: "N/A"
       };
     }
-
+    
     /* ---------------- Global Simulation State ---------------- */
     let simulationState = {};
-
+    
     /* ---------------- Initialization ---------------- */
     async function init() {
-      await loadExternalData(); // load thoughts and activities from external files
+      await loadExternalData(); // load thoughts and activities from external JSON files
       simulationState = await loadStateFromServer();
       if (!simulationState) simulationState = getDefaultState();
       simulationState.headphoneVolume = simulationState.headphoneStatus === "🎧 On" ? `${getRandomInt(10,100)}%` : "N/A";
@@ -291,7 +301,7 @@
       setInterval(updateTimeField, 1000);
     }
     init();
-
+    
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
     const myTabId = Date.now() + "-" + Math.random();
@@ -312,7 +322,7 @@
         localStorage.setItem("simulationLeaderTimestamp", now.toString());
       }
     }
-
+    
     /* ---------------- Scheduled Activity Function ---------------- */
     function getScheduledActivity() {
       const nowMin = getMinutesSinceMidnight();
@@ -336,7 +346,7 @@
       let scheduled = dailySchedule.find(slot => nowMin >= slot.start && nowMin < slot.end);
       return scheduled ? scheduled.activity : "💻 Idle (reviewing door code)";
     }
-
+    
     /* ---------------- Simulation Functions ---------------- */
     function computeDeltaTime() {
       const now = Date.now();
