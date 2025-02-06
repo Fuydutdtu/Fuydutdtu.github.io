@@ -126,11 +126,12 @@
     <img src="images/pfp.jpg" alt="Profile Picture">
     <div>
       <strong>Made By RobloxEmployee</strong><br>
-      Dont Worry, We See You Too 👀
+      Don't Worry, We See You Too 👀
     </div>
   </footer>
 
   <script>
+    "use strict";
     /* ---------------- Utility Functions ---------------- */
     function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -185,8 +186,9 @@
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
     }
-    let loadedState = loadState();
-    simulationState = Object.assign(getDefaultState(), loadedState || {});
+
+    // Declare our simulation state globally.
+    let simulationState = Object.assign(getDefaultState(), loadState() || {});
 
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
@@ -360,7 +362,7 @@
         if (now - simulationState.travelStartTime >= simulationState.travelDuration) {
           simulationState.current_location = simulationState.target_location;
           simulationState.isTraveling = false;
-          if(simulationState.current_location !== "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421"){
+          if (simulationState.current_location !== "The Fresh Market, 2288 Gunbarrel Rd #124, Chattanooga, TN 37421") {
             simulationState.groceryItem = null;
           }
         }
@@ -445,9 +447,12 @@
       simulationState.energyLevel = Math.min(Math.max(simulationState.energyLevel, 0), 100);
     }
     function updateHeartRate() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+      if (simulationState.current_activity && 
+         (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
-        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 ? -getRandomInt(1,3) : getRandomInt(0,1);
+        simulationState.persistentHeartRate += simulationState.persistentHeartRate > 55 
+          ? -getRandomInt(1,3) 
+          : getRandomInt(0,1);
       } else {
         simulationState.persistentHeartRate += getRandomInt(-2,2);
       }
@@ -455,20 +460,22 @@
       return simulationState.persistentHeartRate;
     }
     function updateBodyTemp() {
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+      if (simulationState.current_activity && 
+         (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
         simulationState.persistentBodyTemp -= Math.abs((Math.random()-0.5)*0.2);
       } else {
         simulationState.persistentBodyTemp += (Math.random()-0.5)*0.2;
       }
-      if (simulationState.current_activity && (simulationState.current_activity.includes("Sleeping") ||
+      if (simulationState.current_activity && 
+         (simulationState.current_activity.includes("Sleeping") ||
           simulationState.current_activity.includes("Napping"))) {
         simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,35.5),37.0);
       } else {
         simulationState.persistentBodyTemp = Math.min(Math.max(simulationState.persistentBodyTemp,36.0),37.5);
       }
       let fahrenheit = (simulationState.persistentBodyTemp * 9/5)+32;
-      return fahrenheit.toFixed(1)+"°F";
+      return fahrenheit.toFixed(1) + "°F";
     }
     function getStressLevel(activity) {
       let now = new Date();
@@ -501,23 +508,23 @@
         return workThoughts[getRandomInt(0, workThoughts.length - 1)];
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Sleeping")) {
-  const dreamThoughts = [
-    "maybe i should put a cat on everything ppl cant see",
-    "Zzz… dreaming up some secret image of kreek to hide somwhere",
-    "Napping—my dreams are full of figure meat",
-    "Off in dreamland, plotting some crazy doors shit"
-  ];
-  return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
-}
-
-const baseThoughts = [
-  "I want coffee—this game won't build itself!",
-  "IDK what to think anymore",
-  "Quick breather before more doors madness.",
-  "Snacking and scheming on the next doors idea.",
-  "Maybe I'll sleep on it... Nah, more doors!"
-];
-return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
+        const dreamThoughts = [
+          "maybe i should put a cat on everything ppl cant see",
+          "Zzz… dreaming up some secret image of kreek to hide somwhere",
+          "Napping—my dreams are full of figure meat",
+          "Off in dreamland, plotting some crazy doors shit"
+        ];
+        return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
+      }
+      const baseThoughts = [
+        "I want coffee—this game won't build itself!",
+        "IDK what to think anymore",
+        "Quick breather before more doors madness.",
+        "Snacking and scheming on the next doors idea.",
+        "Maybe I'll sleep on it... Nah, more doors!"
+      ];
+      return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
+    }
 
     /* ---------------- Display Update Functions ---------------- */
     // Update the slow-changing metrics (every 5 seconds in this example)
@@ -549,9 +556,9 @@ return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
       let openApps = getOpenApplications(usageMode);
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : (usageMode==="Car" ? "🚗 Car Apps:" : "📱 Mobile Apps:")}</span> ${openApps.join(", ")}`;
       
-      let cpuUsage;
-      if (usageMode === "Car" || usageMode === "Phone") cpuUsage = getRandomInt(1,10) + "%";
-      else cpuUsage = getRandomInt(10,50) + "%";
+      let cpuUsage = (usageMode === "Car" || usageMode === "Phone")
+        ? getRandomInt(1,10) + "%" 
+        : getRandomInt(10,50) + "%";
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${cpuUsage}`;
       
       let uptimeMs = Date.now() - simulationState.startTime;
@@ -577,7 +584,7 @@ return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
         let durationHere = Math.floor((Date.now() - simulationState.activity_start_time) / 60000);
         activityDisplay += ` [here for ${durationHere} min]`;
       } else {
-        let eta = Math.ceil((simulationState.travelDuration - (Date.now()-simulationState.travelStartTime))/60000);
+        let eta = Math.ceil((simulationState.travelDuration - (Date.now() - simulationState.travelStartTime)) / 60000);
         if (simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN") {
           activityDisplay = "🚗 Commuting home (ETA: " + eta + " min)";
         } else {
@@ -612,6 +619,7 @@ return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     // This function updates the slower metrics and simulates state changes.
     function updateSlowMetrics() {
       tryToBecomeLeader();
+      // Merge stored state (if any) with defaults.
       let storedState = loadState();
       simulationState = Object.assign(getDefaultState(), storedState || {});
       const now = Date.now();
@@ -633,8 +641,8 @@ return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     updateVitalsDisplay();
 
     // Set intervals:
-    // Update slow metrics every 5 seconds.
-    setInterval(updateSlowMetrics, 30000);
+    // Update slow metrics every 10 seconds.
+    setInterval(updateSlowMetrics, 10000);
     // Update time field every second.
     setInterval(updateTimeField, 1000);
     // Update vitals (BPM and Body Temp) every second.
