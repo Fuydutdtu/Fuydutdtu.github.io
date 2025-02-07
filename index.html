@@ -217,24 +217,23 @@
         startTime: Date.now(),
         volume: 36,
         network: { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) },
+        // Extended personal metrics
+        memoryUsage: getRandomInt(30,50),          
+        gpuLoad: getRandomInt(5,15),               
+        storageUsed: 200,                          
+        storageTotal: 500,                         
+        networkLatency: getRandomInt(20,60),        
+        osInfo: "Windows 11",                      
+        browserInfo: "Chrome 112",                 
+        steps: 0,                                  
+        bloodPressure: "120/80",                   
+        sleepQuality: 0,                           
+        focus: 75,                                 
+        screenTime: 0,                             
+        notificationCount: 0,
         // For updating thoughts less often:
         lastThoughtUpdate: 0,
-        currentThought: "",
-        // Extended system metrics:
-        memoryUsage: getRandomInt(30,50),          // percentage
-        gpuLoad: getRandomInt(5,15),               // percentage
-        storageUsed: 200,                          // GB used
-        storageTotal: 500,                         // Total GB
-        networkLatency: getRandomInt(20,60),        // in ms
-        osInfo: "Windows 11",                      // static for session
-        browserInfo: "Chrome 112",                 // static for session
-        // Extended personal metrics:
-        steps: 0,                                  // cumulative step count
-        bloodPressure: "120/80",                   // initial blood pressure
-        sleepQuality: 0,                           // score out of 100
-        focus: 75,                                 // score out of 100
-        screenTime: 0,                             // in minutes
-        notificationCount: 0                       // count of notifications
+        currentThought: ""
       };
     }
     function loadState() {
@@ -247,7 +246,6 @@
     }
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
-      // Placeholder for backend syncing if needed.
     }
     // Declare our simulation state globally.
     let simulationState = Object.assign(getDefaultState(), loadState() || {});
@@ -439,6 +437,131 @@
       if (hour >= 23 || hour < 6) return "💤 Deep Sleeping";
       if (hour >= 13 && hour < 15 && Math.random() < 0.5) return "😴 Light Napping";
       return "Awake";
+    }
+
+    /* ---------------- Activity & Battery / Energy Updates ---------------- */
+    function updateActivityState(now, sleepStatus) {
+      if (simulationState.isTraveling) {
+        if (!simulationState.activity_start_time || simulationState.activity_start_time === 0) {
+          simulationState.activity_start_time = simulationState.travelStartTime;
+          simulationState.activity_duration = simulationState.travelDuration / 1000;
+        }
+        let mapping = locationMapping[simulationState.target_location];
+        if (simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN" && simulationState.travelDuration === 0) {
+          simulationState.current_activity = "🚗 Commuting home";
+        } else {
+          simulationState.current_activity = `🚗 Traveling from ${simulationState.current_location} to ${simulationState.target_location} (${mapping ? mapping.description : "Unknown"})`;
+        }
+        return;
+      }
+      if (simulationState.current_activity &&
+          simulationState.activity_duration !== Infinity &&
+          (now - simulationState.activity_start_time) < simulationState.activity_duration * 1000) {
+        return;
+      }
+      if (simulationState.energyLevel <= 0) {
+        if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
+          simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
+          simulationState.isTraveling = true;
+          simulationState.travelStartTime = now;
+          simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime || getRandomInt(120000,300000);
+          simulationState.current_activity = "🚗 Traveling home for a break";
+          simulationState.activity_start_time = now;
+          simulationState.activity_duration = simulationState.travelDuration > 0 ? simulationState.travelDuration / 1000 : 0;
+          return;
+        } else {
+          simulationState.current_activity = getBreakSubActivity();
+          simulationState.activity_start_time = now;
+          simulationState.activity_duration = Infinity;
+          return;
+        }
+      }
+      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping")) {
+        simulationState.current_activity = sleepStatus;
+        simulationState.activity_duration = Infinity;
+        simulationState.activity_start_time = now;
+        return;
+      }
+      let scheduled = getScheduledActivity();
+      simulationState.current_activity = scheduled;
+      simulationState.activity_duration = getRandomInt(300,900);
+      simulationState.activity_start_time = now;
+    }
+    function updatePhoneBattery(dtMinutes) {
+      if (!simulationState.phoneCharging) {
+        simulationState.phone_battery -= dtMinutes * 2;
+        if (simulationState.phone_battery <= 15) simulationState.phoneCharging = true;
+      } else {
+        simulationState.phone_battery += dtMinutes * 5;
+        if (simulationState.phone_battery >= 100) {
+          simulationState.phone_battery = 100;
+          simulationState.phoneCharging = false;
+        }
+      }
+      if (simulationState.phone_battery < 0) simulationState.phone_battery = 0;
+    }
+    function updateEnergyLevel(dtMinutes, sleepStatus) {
+      if (sleepStatus.includes("Sleeping") || sleepStatus.includes("Napping") ||
+          simulationState.current_activity.toLowerCase().includes("break") ||
+          simulationState.current_activity.toLowerCase().includes("snack")) {
+        simulationState.energyLevel += dtMinutes * 4;
+      } else {
+        simulationState.energyLevel -= dtMinutes * 1;
+      }
+      simulationState.energyLevel = Math.min(Math.max(simulationState.energyLevel, 0), 100);
+    }
+    function getStressLevel(activity) {
+      let now = new Date();
+      let hour = now.getHours();
+      let base = 0;
+      if (activity && activity.includes("Working")) base = 70;
+      else if (activity && activity.includes("Traveling")) base = 50;
+      else if (activity && activity.includes("Sleeping")) base = 20;
+      else base = 40;
+      if (hour >= 12 && hour < 15) base += 10;
+      return base > 60 ? "😰 High" : (base < 40 ? "😌 Low" : "😐 Moderate");
+    }
+    function getThoughtProcess() {
+      if (simulationState.current_activity && simulationState.current_activity.includes("Traveling")) {
+        const drivingThoughts = [
+          "Cruising on the highway, enjoying smooth traffic.",
+          "Listening to tunes and watching the road ahead.",
+          "Anticipating a clear route.",
+          "The road is calm and steady."
+        ];
+        return drivingThoughts[getRandomInt(0, drivingThoughts.length - 1)];
+      }
+      if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
+        const workThoughts = [
+          "What if I delete everything and restart from scratch",
+          "Maybe I should delete the game",
+          "Maybe I should remove figure",
+          "I should procrastinate as much as possible so update doesn't come out",
+          "Maybe I'll rework Floor 3 into something unexpected",
+          "What if the garden subfloor hides a secret passage?",
+          "Should I add more puzzles to Floor 3?"
+        ];
+        return workThoughts[getRandomInt(0, workThoughts.length - 1)];
+      }
+      if (simulationState.current_activity && simulationState.current_activity.includes("Sleeping")) {
+        const dreamThoughts = [
+          "maybe i should put a cat on everything ppl cant see",
+          "Zzz… dreaming up some secret image of kreek to hide somwhere",
+          "Napping—my dreams are full of figure meat",
+          "Off in dreamland, plotting some crazy doors shit"
+        ];
+        return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
+      }
+      const baseThoughts = [
+        "Maybe I should work on Floor 3...", "Why did I announce Floor 2 so early?", "I should touch grass.",
+        "How do I explain another delay?", "Maybe if I pretend to be asleep, no one will ask about updates.",
+        "Who leaked my wade?", "What if I just remove Figure from the game?",
+        "Do people really want Floor 3, or just more leaks?", "Would it be funny if I added another secret entity?",
+        "I swear I'm working, please stop DMing me.", "If I close my eyes, will the bugs fix themselves?",
+        "Maybe I should add a Rickroll room.", "What if I put a troll entity in the first room?",
+        "I should delete the game and start over."
+      ];
+      return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     }
 
     /* ---------------- Extended Metrics Update ---------------- */
