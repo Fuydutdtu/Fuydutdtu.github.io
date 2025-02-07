@@ -528,10 +528,9 @@
     function getThoughtProcess() {
       if (simulationState.current_activity && simulationState.current_activity.includes("Traveling")) {
         const drivingThoughts = [
-          "Cruising on the highway, enjoying smooth traffic.",
-          "Listening to tunes and watching the road ahead.",
-          "Anticipating a clear route.",
-          "The road is calm and steady."
+          "Helicopter, hell yeah!",
+          "It's a bird, it's a plane, IT'S A GLOOMBAT!",
+          "I hope I'm not late or cheddar balls will get mad at me for not releasing the update"
         ];
         return drivingThoughts[getRandomInt(0, drivingThoughts.length - 1)];
       }
@@ -542,7 +541,7 @@
           "Maybe I should remove figure",
           "I should procrastinate as much as possible so update doesn't come out",
           "Maybe I'll rework Floor 3 into something unexpected",
-          "What if the garden subfloor hides a secret passage?",
+          "What if the garden subfloor hides a secret passage to my house?",
           "Should I add more puzzles to Floor 3?"
         ];
         return workThoughts[getRandomInt(0, workThoughts.length - 1)];
