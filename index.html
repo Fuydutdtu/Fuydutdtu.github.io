@@ -274,14 +274,7 @@
         return microMorning[index];
       }
       if (totalMinutes >= 420 && totalMinutes < 728) {
-        const workActivities = [
-          "Working on Doors – coding the front-end UI and debugging CSS issues",
-          "Reviewing emails and planning the day's tasks in detail",
-          "Having a short coffee break while X",
-          "Walking to the bathroom for a quick shit",
-          "Working on Doors modules",
-          "Brainstorming",
-          "Discussing with team"
+        const workActivities = ["💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
         ];
         return workActivities[getRandomInt(0, workActivities.length - 1)];
       }
@@ -303,13 +296,7 @@
             return "At the grocery store: Checking out and heading home";
           }
         }
-        const afternoonActivities = [
-          "Working on floor 3",
-          "Writing excuse on delay",
-          "Smashing head against wall",
-          "Making Sneak Peek",
-          "Coding Wade"
-        ];
+        const afternoonActivities = ["🚶Taking a walk","💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
         return afternoonActivities[getRandomInt(0, afternoonActivities.length - 1)];
       }
       if (totalMinutes >= 1110 && totalMinutes < 1230) {
@@ -538,12 +525,14 @@
         return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
       }
       const baseThoughts = [
-        "I want coffee—this game won't build itself!",
-        "IDK what to think anymore",
-        "Quick breather before more doors madness.",
-        "Snacking and scheming on the next doors idea.",
-        "Maybe I'll sleep on it... Nah, more doors!"
-      ];
+    "Maybe I should work on Floor 3...", "Why did I announce Floor 2 so early?", "I should touch grass.",
+    "How do I explain another delay?", "Maybe if I pretend to be asleep, no one will ask about updates.",
+    "Who leaked my wade?", "What if I just remove Figure from the game?",
+    "Do people really want Floor 3, or just more leaks?", "Would it be funny if I added another secret entity?",
+    "I swear I'm working, please stop DMing me.", "If I close my eyes, will the bugs fix themselves?",
+    "Maybe I should add a Rickroll room.", "What if I put a troll entity in the first room?",
+    "I should delete the game and start over."
+];
       return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     }
 
