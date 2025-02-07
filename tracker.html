@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #23272a; /* dark but not pure black */
+      --bg-primary: #23272a;
       --bg-secondary: rgba(54, 57, 63, 0.85);
       --accent: #00FF00;
       --text-primary: #e0e0e0;
@@ -26,6 +26,20 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+    }
+    nav {
+      background: var(--bg-secondary);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--accent);
+      font-weight: 600;
     }
     .tracker-container {
       max-width: 750px;
@@ -101,7 +115,6 @@
       height: 35px;
       border: 2px solid var(--accent);
     }
-    /* Responsive adjustments */
     @media (max-width: 768px) {
       .field span.label {
         width: 150px;
@@ -116,6 +129,10 @@
   </style>
 </head>
 <body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="tracker.html">Tracker</a>
+  </nav>
   <div class="tracker-container">
     <div class="tracker-header">
       <img src="images/splash.jpg" alt="Lsplash">
@@ -183,7 +200,6 @@
     function getRandomFloat(min, max) {
       return (Math.random() * (max - min) + min).toFixed(1);
     }
-
     /* ---------------- Location & Activity Data ---------------- */
     const locationMapping = {
       "4184 Berkshire Circle, Chattanooga, TN": { description: "Home", travelTime: 0 },
@@ -192,7 +208,6 @@
       "12033 Haycutter Rd, Birchwood, TN": { description: "Jasper's House", travelTime: 2760000 }
     };
     const addresses = Object.keys(locationMapping);
-
     /* ---------------- Persistent State ---------------- */
     function getDefaultState() {
       return {
@@ -217,21 +232,19 @@
         startTime: Date.now(),
         volume: 36,
         network: { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) },
-        // Extended personal metrics
-        memoryUsage: getRandomInt(30,50),          
-        gpuLoad: getRandomInt(5,15),               
-        storageUsed: 200,                          
-        storageTotal: 500,                         
-        networkLatency: getRandomInt(20,60),        
-        osInfo: "Windows 11",                      
-        browserInfo: "Chrome 112",                 
-        steps: 0,                                  
-        bloodPressure: "120/80",                   
-        sleepQuality: 0,                           
-        focus: 75,                                 
-        screenTime: 0,                             
+        memoryUsage: getRandomInt(30,50),
+        gpuLoad: getRandomInt(5,15),
+        storageUsed: 200,
+        storageTotal: 500,
+        networkLatency: getRandomInt(20,60),
+        osInfo: "Windows 11",
+        browserInfo: "Chrome 112",
+        steps: 0,
+        bloodPressure: "120/80",
+        sleepQuality: 0,
+        focus: 75,
+        screenTime: 0,
         notificationCount: 0,
-        // For updating thoughts less often:
         lastThoughtUpdate: 0,
         currentThought: ""
       };
@@ -247,9 +260,7 @@
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
     }
-    // Declare our simulation state globally.
     let simulationState = Object.assign(getDefaultState(), loadState() || {});
-
     /* ---------------- Leader Election (for multi-tab control) ---------------- */
     const LEADER_TIMEOUT = 2000;
     const myTabId = Date.now() + "-" + Math.random();
@@ -270,7 +281,6 @@
         localStorage.setItem("simulationLeaderTimestamp", now.toString());
       }
     }
-
     /* ---------------- Break Sub-Activity Helper ---------------- */
     function getBreakSubActivity() {
       const subActivities = [
@@ -288,7 +298,6 @@
       ];
       return subActivities[getRandomInt(0, subActivities.length - 1)];
     }
-
     /* ---------------- Open Applications Helper ---------------- */
     function getOpenApplications(usageMode) {
       if (usageMode === "Car") {
@@ -304,14 +313,12 @@
       }
       return ["Discord", "YouTube"];
     }
-
     /* ---------------- Logical Activity Scheduler ---------------- */
     function getScheduledActivity() {
       const now = new Date();
       const hour = now.getHours();
       const minute = now.getMinutes();
-      const totalMinutes = hour * 60 + minute; // minutes since midnight
-
+      const totalMinutes = hour * 60 + minute;
       if (simulationState.energyLevel <= 0) {
         return "Break Time – stepping away for a coffee or a walk.";
       }
@@ -321,7 +328,6 @@
         simulationState.activity_start_time = Date.now();
         return "Plugging in phone";
       }
-
       if (totalMinutes >= 390 && totalMinutes < 420) {
         const microMorning = [
           "☀️ Waking up",
@@ -378,7 +384,6 @@
       }
       return "Sleeping";
     }
-
     /* ---------------- Simulation Functions ---------------- */
     function computeDeltaTime() {
       const now = Date.now();
@@ -438,7 +443,6 @@
       if (hour >= 13 && hour < 15 && Math.random() < 0.5) return "😴 Light Napping";
       return "Awake";
     }
-
     /* ---------------- Activity & Battery / Energy Updates ---------------- */
     function updateActivityState(now, sleepStatus) {
       if (simulationState.isTraveling) {
@@ -563,41 +567,32 @@
       ];
       return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     }
-
     /* ---------------- Extended Metrics Update ---------------- */
     function updateExtendedMetrics(dtMinutes) {
-      // Memory usage: gradually increases then resets
       simulationState.memoryUsage += dtMinutes * 0.5;
       if (simulationState.memoryUsage > 90 || Math.random() < 0.05) {
         simulationState.memoryUsage = getRandomInt(30,50);
       }
-      // GPU load: higher if working, lower otherwise
       if(simulationState.current_activity.toLowerCase().includes("working")) {
         simulationState.gpuLoad = getRandomInt(20,50);
       } else {
         simulationState.gpuLoad = getRandomInt(5,15);
       }
-      // Storage: increases slowly; if it gets too high, simulate a cleanup
       simulationState.storageUsed += dtMinutes * 0.1;
       if(simulationState.storageUsed >= simulationState.storageTotal * 0.9) {
         simulationState.storageUsed *= 0.8;
       }
-      // Network latency: small random fluctuation
       simulationState.networkLatency = getRandomInt(20,60);
-      // Screen time: accumulate over time
       simulationState.screenTime += dtMinutes;
-      // Steps: increase faster if traveling or walking
       if(simulationState.current_activity.toLowerCase().includes("travel") ||
          simulationState.current_activity.toLowerCase().includes("walk")) {
         simulationState.steps += getRandomInt(10,30);
       } else {
         simulationState.steps += getRandomInt(0,5);
       }
-      // Blood pressure: fluctuate slightly around 120/80
       let systolic = 120 + getRandomInt(-3,3);
       let diastolic = 80 + getRandomInt(-2,2);
       simulationState.bloodPressure = systolic + "/" + diastolic;
-      // Sleep quality: improve when sleeping, decay otherwise
       if(simulationState.current_activity.toLowerCase().includes("sleep")) {
         simulationState.sleepQuality += dtMinutes * 2;
         if(simulationState.sleepQuality > 100) simulationState.sleepQuality = 100;
@@ -605,7 +600,6 @@
         simulationState.sleepQuality -= dtMinutes;
         if(simulationState.sleepQuality < 0) simulationState.sleepQuality = 0;
       }
-      // Focus: increase when working, decrease during breaks
       if(simulationState.current_activity.toLowerCase().includes("working")) {
         simulationState.focus = Math.min(100, simulationState.focus + dtMinutes * 3);
       } else if(simulationState.current_activity.toLowerCase().includes("break")) {
@@ -613,14 +607,12 @@
       } else {
         simulationState.focus = 75;
       }
-      // Notifications: if device is mobile or activity involves phone use, increase count
       if(simulationState.device_info.toLowerCase().includes("mobile") ||
          simulationState.current_activity.toLowerCase().includes("phone")) {
         if(Math.random() < 0.2) simulationState.notificationCount++;
       }
     }
     function updateExtendedDisplay() {
-      // System extended fields
       if(document.getElementById("memoryField"))
         document.getElementById("memoryField").innerHTML = `<span class="label">🧠 Memory Usage:</span> ${simulationState.memoryUsage.toFixed(0)}%`;
       if(document.getElementById("gpuField"))
@@ -633,7 +625,6 @@
         document.getElementById("osField").innerHTML = `<span class="label">🖥️ OS:</span> ${simulationState.osInfo}`;
       if(document.getElementById("browserField"))
         document.getElementById("browserField").innerHTML = `<span class="label">🌐 Browser:</span> ${simulationState.browserInfo}`;
-      // Personal extended fields
       if(document.getElementById("stepsField"))
         document.getElementById("stepsField").innerHTML = `<span class="label">👣 Steps:</span> ${simulationState.steps}`;
       if(document.getElementById("bpField"))
@@ -647,12 +638,9 @@
       if(document.getElementById("notifField"))
         document.getElementById("notifField").innerHTML = `<span class="label">🔔 Notifications:</span> ${simulationState.notificationCount}`;
     }
-
     /* ---------------- Vitals and Time Display ---------------- */
     function updateSlowDisplay() {
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
-      
-      // Determine usageMode based on activity
       let usageMode;
       if (simulationState.isTraveling) {
         usageMode = "Car";
@@ -672,76 +660,56 @@
       } else {
         document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${simulationState.current_location}`;
       }
-      
       let deviceInfo;
       if (usageMode === "Car") deviceInfo = "CarPlay | Tesla Autopilot";
       else if (usageMode === "Phone") deviceInfo = "Mobile Device: iPhone 12";
       else deviceInfo = simulationState.device_info;
       document.getElementById("deviceField").innerHTML = `<span class="label">🖥️ Device Info:</span> ${deviceInfo}`;
-      
       let openApps = getOpenApplications(usageMode);
       document.getElementById("appsField").innerHTML = `<span class="label">${usageMode==="PC" ? "🗂️ Open Apps:" : (usageMode==="Car" ? "🚗 Car Apps:" : "📱 Mobile Apps:")}</span> ${openApps.join(", ")}`;
-      
       let cpuUsage = (usageMode === "Car" || usageMode === "Phone")
         ? getRandomInt(1,10) + "%" 
         : getRandomInt(10,50) + "%";
       document.getElementById("cpuField").innerHTML = `<span class="label">💻 CPU Usage:</span> ${cpuUsage}`;
-      
       let uptimeMs = Date.now() - simulationState.startTime;
       let uptimeHours = Math.floor(uptimeMs / (1000 * 60 * 60));
       let uptimeMinutes = Math.floor((uptimeMs / (1000 * 60)) % 60);
       document.getElementById("uptimeField").innerHTML = `<span class="label">⏱️ Uptime:</span> ${uptimeHours}h ${uptimeMinutes}m`;
-      
       if (Math.random() < 0.05) {
         simulationState.network = { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) };
       }
       document.getElementById("networkField").innerHTML = `<span class="label">📡 Network:</span> ${simulationState.network.download} Mbps ↓ | ${simulationState.network.upload} Mbps ↑`;
-      
       if (Math.random() < 0.1) {
         simulationState.volume = Math.max(30, Math.min(42, simulationState.volume + getRandomInt(-1,1)));
       }
       let headphoneStatus = Math.random() < 0.5 ? "🎧 On" : "❌ Off";
       document.getElementById("headphoneField").innerHTML = `<span class="label">🎧 Headphones:</span> ${headphoneStatus} | Volume: ${simulationState.volume}%`;
-      
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
-      
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${simulationState.current_activity}`;
-      
-      // Only show keystrokes if "working" is in the current activity
       if (simulationState.current_activity.toLowerCase().includes("working")) {
         let keystrokes = getRandomInt(50,200);
         document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
       } else {
         document.getElementById("keysField").innerHTML = "";
       }
-      
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
-      
       let phoneStatus = simulationState.phoneCharging ? "(Charging)" : "(Not Charging)";
       document.getElementById("phoneField").innerHTML = `<span class="label">📲 Phone Battery:</span> ${Math.round(simulationState.phone_battery)}% ${phoneStatus}`;
-      
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
-      
       if (!simulationState.lastThoughtUpdate || Date.now() - simulationState.lastThoughtUpdate > 30000) {
         simulationState.currentThought = getThoughtProcess();
         simulationState.lastThoughtUpdate = Date.now();
       }
       document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${simulationState.currentThought}"`;
-      
-      // Update extended metrics display
       updateExtendedDisplay();
     }
-    
     function updateVitalsDisplay() {
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
       document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
     }
-    
     function updateTimeField() {
       document.getElementById("timeField").innerHTML = `<span class="label">🕰️ Time:</span> ${getESTTime()}`;
     }
-    
-    /* ---------------- Main Update Function ---------------- */
     function updateSlowMetrics() {
       tryToBecomeLeader();
       let storedState = loadState();
@@ -759,22 +727,15 @@
       updateLeaderHeartbeat();
       updateSlowDisplay();
     }
-    
-    // Initial calls
     updateSlowMetrics();
     updateTimeField();
     updateVitalsDisplay();
-    
-    // Set intervals:
     setInterval(updateSlowMetrics, 5000);
     setInterval(updateTimeField, 1000);
     setInterval(updateVitalsDisplay, 1000);
-    
     window.addEventListener("beforeunload", function() {
       saveState(simulationState);
     });
-    
-    /* ---------------- Helper Functions for Vitals ---------------- */
     function updateHeartRate() {
       if (simulationState.current_activity &&
          (simulationState.current_activity.includes("Sleeping") ||
