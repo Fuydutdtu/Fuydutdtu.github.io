@@ -216,11 +216,19 @@
     /* ---------------- Break Sub-Activity Helper ---------------- */
     function getBreakSubActivity() {
       const subActivities = [
-        "Taking a Break (Binge Watching Tiktok)",
-        "Taking a Break (Having a snack)",
-        "Snack Time – Grabbing a bite",
-        "Taking a Break (Chatting with friends)"
-      ];
+  "Taking a Break (Binge Watching TikTok)",
+  "Taking a Break (Having a snack)",
+  "Snack Time – Grabbing a bite",
+  "Taking a Break (Chatting with friends)",
+  "Taking a Break (Scrolling through memes)",
+  "Taking a Break (Checking social media)",
+  "Taking a Break (Listening to music)",
+  "Taking a Break (Sipping coffee)",
+  "Taking a Break (Playing MINIGAMES!!!)",
+  "Taking a Break (Watching funny videos)",
+  "Taking a Break (Daydreaming for a moment)"
+];
+
       return subActivities[getRandomInt(0, subActivities.length - 1)];
     }
 
@@ -508,11 +516,14 @@
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
         const workThoughts = [
-          "What if I delete everything and restart from scratch",
-          "Maybe I should delete the game",
-          "Maybe I should remove figure",
-          "I should procrastinate as much as possible so update doesn't come out"
-        ];
+  "What if I delete everything and restart from scratch",
+  "Maybe I should delete the game",
+  "Maybe I should remove figure",
+  "I should procrastinate as much as possible so update doesn't come out",
+  "Maybe I'll rework Floor 3 into something unexpected",
+  "What if the garden subfloor hides a secret passage?",
+  "Should I add more puzzles to Floor 3?"];
+
         return workThoughts[getRandomInt(0, workThoughts.length - 1)];
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Sleeping")) {
