@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Lsplash Live Tracker</title>
+  <!-- Import Google Fonts for a better UI look -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #2f3136;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      /* A subtle gradient background for a modern look */
+      background: linear-gradient(135deg, #2f3136, #202225);
+      font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
       margin: 0;
       padding: 20px;
@@ -44,6 +47,10 @@
       border: 1px solid #444;
       border-radius: 5px;
       background: #2c2f33;
+      transition: background 0.3s ease;
+    }
+    .section:hover {
+      background: #32373c;
     }
     .section-title {
       font-size: 24px;
@@ -109,6 +116,7 @@
       <div class="field" id="energyField"></div>
       <div class="field" id="sleepField"></div>
       <div class="field" id="activityField"></div>
+      <!-- Keystrokes will only appear when the activity includes "working" -->
       <div class="field" id="keysField"></div>
       <div class="field" id="phoneField"></div>
     </div>
@@ -164,9 +172,7 @@
         phone_battery: getRandomInt(50, 80),
         phoneCharging: false,
         current_activity: "Initializing",
-        // activity_start_time will be set when a new task begins
         activity_start_time: Date.now(),
-        // activity_duration is in seconds (used internally only)
         activity_duration: 0,
         persistentHeartRate: getRandomInt(60, 80),
         persistentBodyTemp: 36.5 + (Math.random() - 0.5),
@@ -174,7 +180,10 @@
         groceryItem: null,
         startTime: Date.now(),
         volume: 36,
-        network: { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) }
+        network: { download: getRandomFloat(5,15), upload: getRandomFloat(1,5) },
+        // New properties to update thoughts less often:
+        lastThoughtUpdate: 0,
+        currentThought: ""
       };
     }
     function loadState() {
@@ -187,6 +196,14 @@
     }
     function saveState(state) {
       localStorage.setItem("simulationState", JSON.stringify(state));
+      // Placeholder: To save state across devices, integrate with a backend service.
+      // For example, you might use Firebase Firestore or Realtime Database.
+      // syncStateToServer(state);
+    }
+    // Placeholder function for syncing state to a remote server.
+    function syncStateToServer(state) {
+      // TODO: Replace this with actual code to save the state remotely.
+      console.log("Syncing state to server...", state);
     }
 
     // Declare our simulation state globally.
@@ -216,19 +233,18 @@
     /* ---------------- Break Sub-Activity Helper ---------------- */
     function getBreakSubActivity() {
       const subActivities = [
-  "Taking a Break (Binge Watching TikTok)",
-  "Taking a Break (Having a snack)",
-  "Snack Time – Grabbing a bite",
-  "Taking a Break (Chatting with friends)",
-  "Taking a Break (Scrolling through memes)",
-  "Taking a Break (Checking social media)",
-  "Taking a Break (Listening to music)",
-  "Taking a Break (Sipping coffee)",
-  "Taking a Break (Playing MINIGAMES!!!)",
-  "Taking a Break (Watching funny videos)",
-  "Taking a Break (Daydreaming for a moment)"
-];
-
+        "Taking a Break (Binge Watching TikTok)",
+        "Taking a Break (Having a snack)",
+        "Snack Time – Grabbing a bite",
+        "Taking a Break (Chatting with friends)",
+        "Taking a Break (Scrolling through memes)",
+        "Taking a Break (Checking social media)",
+        "Taking a Break (Listening to music)",
+        "Taking a Break (Sipping coffee)",
+        "Taking a Break (Playing MINIGAMES!!!)",
+        "Taking a Break (Watching funny videos)",
+        "Taking a Break (Daydreaming for a moment)"
+      ];
       return subActivities[getRandomInt(0, subActivities.length - 1)];
     }
 
@@ -303,7 +319,7 @@
             return "At the grocery store: Checking out and heading home";
           }
         }
-        const afternoonActivities = ["🚶Taking a walk","💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
+        const afternoonActivities = ["🚶Taking a walk", "💻 Working on Doors", "📞 Meeting with team", "🤔 Brainstorming ideas", "🛠️ Fixing bugs", "📝 Coding", "🔍 Debugging Doors", "🤖 Reviewing game stats", "📊 Analyzing feedback"];
         return afternoonActivities[getRandomInt(0, afternoonActivities.length - 1)];
       }
       if (totalMinutes >= 1110 && totalMinutes < 1230) {
@@ -384,16 +400,12 @@
 
     /* ---------------- Activity State Update ---------------- */
     function updateActivityState(now, sleepStatus) {
-      // For traveling, update the activity text (but don’t reset the timer repeatedly)
       if (simulationState.isTraveling) {
-        // If this is the first time during the travel period, initialize the travel timer.
         if (!simulationState.activity_start_time || simulationState.activity_start_time === 0) {
           simulationState.activity_start_time = simulationState.travelStartTime;
-          // travelDuration is in ms; convert to seconds.
           simulationState.activity_duration = simulationState.travelDuration / 1000;
         }
         let mapping = locationMapping[simulationState.target_location];
-        // If traveling home and the travel time is 0, simply display "Commuting home"
         if (simulationState.target_location === "4184 Berkshire Circle, Chattanooga, TN" && simulationState.travelDuration === 0) {
           simulationState.current_activity = "🚗 Commuting home";
         } else {
@@ -401,19 +413,16 @@
         }
         return;
       }
-      // For non-travel activities, if the current task duration has not yet elapsed, do not update.
       if (simulationState.current_activity &&
           simulationState.activity_duration !== Infinity &&
           (now - simulationState.activity_start_time) < simulationState.activity_duration * 1000) {
         return;
       }
-      // Otherwise, update the activity based on conditions.
       if (simulationState.energyLevel <= 0) {
         if (simulationState.current_location !== "4184 Berkshire Circle, Chattanooga, TN") {
           simulationState.target_location = "4184 Berkshire Circle, Chattanooga, TN";
           simulationState.isTraveling = true;
           simulationState.travelStartTime = now;
-          // If the home travel time is 0, you might want to assign a default travel duration.
           simulationState.travelDuration = locationMapping["4184 Berkshire Circle, Chattanooga, TN"].travelTime || getRandomInt(120000,300000);
           simulationState.current_activity = "🚗 Traveling home for a break";
           simulationState.activity_start_time = now;
@@ -432,7 +441,6 @@
         simulationState.activity_start_time = now;
         return;
       }
-      // For regular (non-travel, non-sleep) tasks, choose a scheduled activity and a random duration (in seconds)
       let scheduled = getScheduledActivity();
       simulationState.current_activity = scheduled;
       simulationState.activity_duration = getRandomInt(300,900);
@@ -515,14 +523,14 @@
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Working")) {
         const workThoughts = [
-  "What if I delete everything and restart from scratch",
-  "Maybe I should delete the game",
-  "Maybe I should remove figure",
-  "I should procrastinate as much as possible so update doesn't come out",
-  "Maybe I'll rework Floor 3 into something unexpected",
-  "What if the garden subfloor hides a secret passage?",
-  "Should I add more puzzles to Floor 3?"];
-
+          "What if I delete everything and restart from scratch",
+          "Maybe I should delete the game",
+          "Maybe I should remove figure",
+          "I should procrastinate as much as possible so update doesn't come out",
+          "Maybe I'll rework Floor 3 into something unexpected",
+          "What if the garden subfloor hides a secret passage?",
+          "Should I add more puzzles to Floor 3?"
+        ];
         return workThoughts[getRandomInt(0, workThoughts.length - 1)];
       }
       if (simulationState.current_activity && simulationState.current_activity.includes("Sleeping")) {
@@ -535,14 +543,14 @@
         return dreamThoughts[getRandomInt(0, dreamThoughts.length - 1)];
       }
       const baseThoughts = [
-    "Maybe I should work on Floor 3...", "Why did I announce Floor 2 so early?", "I should touch grass.",
-    "How do I explain another delay?", "Maybe if I pretend to be asleep, no one will ask about updates.",
-    "Who leaked my wade?", "What if I just remove Figure from the game?",
-    "Do people really want Floor 3, or just more leaks?", "Would it be funny if I added another secret entity?",
-    "I swear I'm working, please stop DMing me.", "If I close my eyes, will the bugs fix themselves?",
-    "Maybe I should add a Rickroll room.", "What if I put a troll entity in the first room?",
-    "I should delete the game and start over."
-];
+        "Maybe I should work on Floor 3...", "Why did I announce Floor 2 so early?", "I should touch grass.",
+        "How do I explain another delay?", "Maybe if I pretend to be asleep, no one will ask about updates.",
+        "Who leaked my wade?", "What if I just remove Figure from the game?",
+        "Do people really want Floor 3, or just more leaks?", "Would it be funny if I added another secret entity?",
+        "I swear I'm working, please stop DMing me.", "If I close my eyes, will the bugs fix themselves?",
+        "Maybe I should add a Rickroll room.", "What if I put a troll entity in the first room?",
+        "I should delete the game and start over."
+      ];
       return baseThoughts[getRandomInt(0, baseThoughts.length - 1)];
     }
 
@@ -551,9 +559,7 @@
     function updateSlowDisplay() {
       document.getElementById("ipField").innerHTML = `<span class="label">🌐 IP Address:</span> ${simulationState.current_ip} (updates every ~5 mins)`;
       
-      // Simply display the current location (no ETA appended)
-      document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${simulationState.current_location}`;
-      
+      // Show ETA in the location field only when traveling in Car mode
       let usageMode;
       if (simulationState.isTraveling) {
         usageMode = "Car";
@@ -565,6 +571,15 @@
           usageMode = Math.random() < 0.5 ? "PC" : "Phone";
         }
       }
+      if (simulationState.isTraveling && usageMode === "Car") {
+        let elapsed = Date.now() - simulationState.travelStartTime;
+        let remaining = simulationState.travelDuration - elapsed;
+        let etaMinutes = remaining > 0 ? Math.ceil(remaining / 60000) : 0;
+        document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${simulationState.current_location} (ETA: ${etaMinutes} min)`;
+      } else {
+        document.getElementById("locationField").innerHTML = `<span class="label">📍 Location:</span> ${simulationState.current_location}`;
+      }
+      
       let deviceInfo;
       if (usageMode === "Car") deviceInfo = "CarPlay | Tesla Autopilot";
       else if (usageMode === "Phone") deviceInfo = "Mobile Device: iPhone 12";
@@ -597,11 +612,15 @@
       
       document.getElementById("usageModeField").innerHTML = `<span class="label">🔌 Usage Mode:</span> ${usageMode}`;
       
-      // Simply display the current activity without appending duration details.
       document.getElementById("activityField").innerHTML = `<span class="label">📊 Activity:</span> ${simulationState.current_activity}`;
       
-      let keystrokes = simulationState.current_activity.toLowerCase().includes("working") ? getRandomInt(50,200) : 0;
-      document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
+      // Only show keystrokes if the activity includes "working"
+      if (simulationState.current_activity.toLowerCase().includes("working")) {
+        let keystrokes = getRandomInt(50,200);
+        document.getElementById("keysField").innerHTML = `<span class="label">⌨️ Keystrokes:</span> ${keystrokes} /min`;
+      } else {
+        document.getElementById("keysField").innerHTML = "";
+      }
       
       document.getElementById("energyField").innerHTML = `<span class="label">⚡ Energy:</span> ${simulationState.energyLevel.toFixed(0)}%`;
       
@@ -610,10 +629,15 @@
       
       document.getElementById("stressField").innerHTML = `<span class="label">😰 Stress:</span> ${getStressLevel(simulationState.current_activity)}`;
       
-      document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${getThoughtProcess()}"`;
+      // Update thought only every 30 seconds
+      if (!simulationState.lastThoughtUpdate || Date.now() - simulationState.lastThoughtUpdate > 30000) {
+        simulationState.currentThought = getThoughtProcess();
+        simulationState.lastThoughtUpdate = Date.now();
+      }
+      document.getElementById("thoughtField").innerHTML = `<span class="label">💭 Thoughts:</span> "${simulationState.currentThought}"`;
     }
     
-    // Update only the vitals (heart rate and body temperature) every second
+    // Update the vitals (heart rate and body temperature) every second
     function updateVitalsDisplay() {
       document.getElementById("heartField").innerHTML = `<span class="label">❤️ Heart Rate:</span> ${updateHeartRate()} BPM`;
       document.getElementById("tempField").innerHTML = `<span class="label">🌡️ Body Temp:</span> ${updateBodyTemp()}`;
