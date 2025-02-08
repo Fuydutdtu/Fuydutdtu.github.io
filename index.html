@@ -43,22 +43,20 @@
 </head>
 <body>
   <nav>
-    <!-- The following links navigate directly to your Discord server -->
-    <a href="https://discord.gg/JXcEeqcehZ" title="Doors UGC & Badge Notifier">Doors UGC & Badge Notifier</a>
-    <a href="https://discord.gg/JXcEeqcehZ" title="Doors API">Doors API</a>
-    <a href="https://discord.gg/JXcEeqcehZ" title="Doors Twitter">Doors Twitter</a>
-    <a href="https://discord.gg/JXcEeqcehZ" title="Doors Countdown">Doors Countdown</a>
-    <!-- The Lsplash Tracker link navigates to /tracker.html in the current tab -->
-    <!-- and opens the Discord invite in a new tab -->
-    <a href="/LSPLASHTracker/tracker.html" id="tracker-link" title="Lsplash Tracker">Lsplash Tracker</a>
+    <!-- These links navigate to a generic bot page that tells users the bot is in the Discord server. -->
+    <a href="bot.html?bot=Doors%20UGC%20%26%20Badge%20Notifier" title="Doors UGC & Badge Notifier">Doors UGC & Badge Notifier</a>
+    <a href="bot.html?bot=Doors%20API" title="Doors API">Doors API</a>
+    <a href="bot.html?bot=Doors%20Twitter" title="Doors Twitter">Doors Twitter</a>
+    <a href="bot.html?bot=Doors%20Countdown" title="Doors Countdown">Doors Countdown</a>
+    <!-- The Lsplash Tracker link navigates to tracker.html in the current tab -->
+    <a href="tracker.html" id="tracker-link" title="Lsplash Tracker">Lsplash Tracker</a>
   </nav>
   
   <script>
-    // For the Lsplash Tracker link, open Discord in a new tab before navigating to /tracker.html.
+    // For the Lsplash Tracker link, open Discord in a new tab while navigating the current tab to tracker.html.
     document.getElementById('tracker-link').addEventListener('click', function(e) {
-      // Open the Discord server in a new tab.
       window.open('https://discord.gg/JXcEeqcehZ', '_blank');
-      // The default link behavior continues, navigating the current tab to /tracker.html.
+      // The browser will follow the link to tracker.html in the current tab.
     });
   </script>
 </body>
